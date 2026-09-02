@@ -369,65 +369,72 @@ async function startPayment() {
     },
 
 
-    handler: function(response) {
+    handler: async function(response) {
 
-      console.log(
-        "Razorpay Payment:",
-        response
-      );
+  console.log("Razorpay Payment:", response);
 
-
-      /*
-        IMPORTANT:
-        Payment ko abhi successful
-        nahi maan rahe hain.
-
-        Next step mein server-side
-        signature verification hoga.
-      */
-
-      document.getElementById("paymentSection").style.display =
-        "none";
-
-      document.getElementById("successSection").style.display =
-        "block";
+  message.textContent = "⏳ Payment verify ho raha hai...";
 
 
-      document.querySelector("#successSection h2").textContent =
-        "Payment Received";
-
-
-      document.querySelector("#successSection .status").textContent =
-        "⏳ Verification Pending";
-
-
-      document.querySelector("#successSection p").textContent =
-        "Razorpay payment response mil gaya hai. Payment verification pending hai.";
-
-    },
-
-
-    modal: {
-
-      ondismiss: function() {
-
-        button.disabled = false;
-
-        button.textContent =
-          "💳 Pay ₹19 & Submit Campaign";
-
+  // Server-side payment verification
+  const { data, error } =
+    await window.supabaseClient.functions.invoke(
+      "verify-payment",
+      {
+        body: {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          campaign_id: campaignId
+        }
       }
-
-    }
-
-  };
+    );
 
 
-  const razorpay = new Razorpay(options);
+  if (error) {
 
-  razorpay.open();
+    console.error("Verification error:", error);
 
-}
+    message.style.color = "#b00020";
+
+    message.textContent =
+      "❌ Payment verification failed. Please contact SubHelp support.";
+
+    return;
+  }
+
+
+  if (!data || !data.success) {
+
+    message.style.color = "#b00020";
+
+    message.textContent =
+      "❌ Payment verify nahi ho saka.";
+
+    return;
+  }
+
+
+  // Payment genuinely verified
+  document.getElementById("paymentSection").style.display =
+    "none";
+
+  document.getElementById("successSection").style.display =
+    "block";
+
+
+  document.querySelector("#successSection h2").textContent =
+    "Payment Successful!";
+
+
+  document.querySelector("#successSection .status").textContent =
+    "⏳ Pending Verification";
+
+
+  document.querySelector("#successSection p").textContent =
+    "Tumhari ₹19 campaign creation fee successfully verify ho gayi hai. Campaign ab SubHelp verification ke liye submit ho gayi hai.";
+
+},
 
 </script>
 
