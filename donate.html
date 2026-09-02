@@ -4,303 +4,297 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Donate – SubHelp</title>
+  <title>Donate - SubHelp</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./supabase-config.js"></script>
 
   <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background: #f6f7fb;
-      color: #171717;
+      background: #f5f7fb;
+      color: #222;
     }
 
-    header {
-      background: white;
-      padding: 16px 6%;
-      border-bottom: 1px solid #eee;
-    }
-
-    .logo {
-      font-size: 25px;
-      font-weight: 800;
-    }
-
-    .logo span {
-      color: #635bff;
+    .header {
+      background: #ffffff;
+      padding: 16px 20px;
+      border-bottom: 1px solid #ddd;
+      font-size: 22px;
+      font-weight: bold;
+      color: #2563eb;
     }
 
     .container {
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 0 18px;
-    }
-
-    .back {
-      display: inline-block;
-      margin-bottom: 18px;
-      color: #635bff;
-      text-decoration: none;
-      font-weight: 700;
+      max-width: 520px;
+      margin: 25px auto;
+      padding: 0 16px;
     }
 
     .card {
       background: white;
-      border: 1px solid #eee;
-      border-radius: 20px;
-      padding: 25px;
-    }
-
-    .category {
-      display: inline-block;
-      background: #f1f0ff;
-      color: #635bff;
-      padding: 7px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 14px;
-    }
-
-    h1 {
-      font-size: 27px;
-      margin-bottom: 10px;
-      line-height: 1.3;
-    }
-
-    .description {
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 22px;
-    }
-
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .collected {
-      font-weight: 800;
-    }
-
-    .goal {
-      color: #666;
-    }
-
-    .progress {
-      width: 100%;
-      height: 10px;
-      background: #e8e8e8;
-      border-radius: 20px;
-      overflow: hidden;
-      margin-bottom: 25px;
-    }
-
-    .progress-bar {
-      height: 100%;
-      background: #635bff;
-      border-radius: 20px;
-    }
-
-    .donate-box {
-      background: #f8f8ff;
-      border-radius: 15px;
+      border-radius: 14px;
       padding: 20px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+      margin-bottom: 18px;
     }
 
-    .donate-box h2 {
-      font-size: 21px;
+    h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+
+    .campaign-title {
+      font-size: 20px;
+      font-weight: bold;
       margin-bottom: 8px;
     }
 
-    .donate-box p {
+    .info {
       color: #666;
-      font-size: 14px;
       line-height: 1.5;
-      margin-bottom: 18px;
+    }
+
+    .upi-box {
+      background: #f1f5ff;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 15px;
+      word-break: break-all;
+    }
+
+    .upi-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .upi-id {
+      font-weight: bold;
+      color: #1d4ed8;
     }
 
     .amount-buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      margin-bottom: 15px;
+      margin: 15px 0;
     }
 
-    .amount-button {
-      padding: 12px 5px;
-      border: 1px solid #ddd;
-      border-radius: 9px;
+    .amount-buttons button {
+      padding: 11px 5px;
+      border: 1px solid #2563eb;
       background: white;
-      font-size: 15px;
-      font-weight: 700;
+      color: #2563eb;
+      border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    .amount-button:hover {
-      border-color: #635bff;
-    }
-
-    .amount-button.selected {
-      background: #635bff;
+    .amount-buttons button:hover {
+      background: #2563eb;
       color: white;
-      border-color: #635bff;
     }
 
-    .custom-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 7px;
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 12px;
     }
 
-    .custom-input {
+    .main-btn {
       width: 100%;
       padding: 14px;
-      border: 1px solid #ddd;
-      border-radius: 9px;
-      font-size: 16px;
-      outline: none;
-      margin-bottom: 15px;
-    }
-
-    .custom-input:focus {
-      border-color: #635bff;
-    }
-
-    .donate-button {
-      width: 100%;
       border: none;
-      background: #635bff;
+      border-radius: 9px;
+      background: #2563eb;
       color: white;
-      padding: 15px;
-      border-radius: 10px;
       font-size: 17px;
-      font-weight: 700;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    .donate-button:hover {
-      opacity: 0.9;
-    }
-
-    .donate-button:disabled {
-      opacity: 0.6;
+    .main-btn:disabled {
+      background: #999;
       cursor: not-allowed;
     }
 
-    .upi-info {
-      margin-top: 18px;
-      padding: 14px;
-      background: white;
-      border: 1px solid #e5e5e5;
-      border-radius: 10px;
-      text-align: center;
+    .paid-btn {
+      background: #16a34a;
+    }
+
+    .small {
       font-size: 13px;
-      color: #666;
-    }
-
-    .upi-id {
-      display: block;
-      margin-top: 5px;
-      color: #171717;
-      font-weight: 800;
-      word-break: break-all;
-    }
-
-    .message {
-      margin-top: 15px;
-      text-align: center;
-      font-weight: 700;
-      line-height: 1.5;
-    }
-
-    .notice {
-      margin-top: 18px;
-      padding-top: 15px;
-      border-top: 1px solid #ddd;
       color: #777;
-      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .success {
+      background: #ecfdf5;
+      color: #166534;
+      padding: 14px;
+      border-radius: 9px;
+      margin-top: 12px;
       line-height: 1.5;
-      text-align: center;
-    }
-
-    .loading,
-    .error {
-      background: white;
-      border: 1px solid #eee;
-      border-radius: 18px;
-      padding: 40px 20px;
-      text-align: center;
-      color: #666;
-      line-height: 1.6;
     }
 
     .error {
-      background: #fff0f0;
-      color: #b00020;
+      background: #fef2f2;
+      color: #991b1b;
+      padding: 14px;
+      border-radius: 9px;
+      margin-top: 12px;
     }
 
-    @media (max-width: 500px) {
-
-      .card {
-        padding: 20px;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      .amount-buttons {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: #2563eb;
+      text-decoration: none;
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <div class="logo">
-    Sub<span>Help</span>
+  <div class="header">
+    SubHelp
   </div>
-</header>
 
+  <div class="container">
 
-<div class="container">
+    <!-- Campaign -->
+    <div class="card">
 
-  <a href="campaigns.html" class="back">
-    ← Back to Campaigns
-  </a>
+      <div class="campaign-title" id="campaignTitle">
+        Loading...
+      </div>
 
+      <div class="info" id="campaignInfo">
+        Please wait...
+      </div>
 
-  <div id="content">
+      <div class="upi-box">
+        <div class="upi-label">Campaign Owner UPI ID</div>
+        <div class="upi-id" id="upiId">Loading...</div>
+      </div>
 
-    <div class="loading">
-      Campaign details load ho rahi hain...
     </div>
 
-  </div>
 
-</div>
+    <!-- Donation -->
+    <div class="card">
+
+      <h2>Help This Campaign</h2>
+
+      <div class="amount-buttons">
+        <button onclick="selectAmount(10)">₹10</button>
+        <button onclick="selectAmount(50)">₹50</button>
+        <button onclick="selectAmount(100)">₹100</button>
+        <button onclick="selectAmount(500)">₹500</button>
+      </div>
+
+      <input
+        type="number"
+        id="amount"
+        placeholder="Enter amount"
+        min="1"
+        step="1"
+      >
+
+      <button
+        class="main-btn"
+        id="donateBtn"
+        onclick="startDonation()"
+      >
+        Donate Now
+      </button>
+
+      <div class="small">
+        Payment campaign owner ke UPI account me directly jayega.
+      </div>
+
+      <div id="message"></div>
+
+    </div>
+
+
+    <!-- I Have Paid -->
+    <div class="card hidden" id="paidSection">
+
+      <h2>Payment Kar Diya?</h2>
+
+      <p class="info">
+        Agar aapne UPI payment successfully kar di hai,
+        to neeche details submit karein.
+      </p>
+
+      <input
+        type="text"
+        id="utr"
+        placeholder="UTR / Transaction ID (Optional)"
+      >
+
+      <button
+        class="main-btn paid-btn"
+        onclick="submitPayment()"
+        id="paidBtn"
+      >
+        ✅ I Have Paid
+      </button>
+
+      <div class="small">
+        UTR available nahi hai to bhi submit kar sakte hain.
+      </div>
+
+      <div id="paidMessage"></div>
+
+    </div>
+
+    <a
+      class="back"
+      href="campaigns.html"
+    >
+      ← Back to Campaigns
+    </a>
+
+  </div>
 
 
 <script>
 
-  // -----------------------------------------
-  // CAMPAIGN ID
-  // -----------------------------------------
+  /* =========================
+     SUPABASE CONFIG
+  ========================= */
+
+  const SUPABASE_URL =
+    "https://ojvzqsxfdaknxdawffhu.supabase.co";
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    "YOUR_FULL_PUBLISHABLE_KEY";
+
+  window.supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =========================
+     VARIABLES
+  ========================= */
 
   const params =
     new URLSearchParams(window.location.search);
@@ -308,492 +302,139 @@
   const campaignId =
     params.get("id");
 
-  const content =
-    document.getElementById("content");
-
-
+  let campaignUpi = "";
+  let campaignTitle = "";
+  let campaignGoal = 0;
+  let campaignCollected = 0;
   let selectedAmount = 0;
 
-  let campaignGoal = 0;
 
-  let campaignCollected = 0;
-
-  let campaignUpi = "";
-
-  let campaignTitle = "";
-
-
-  // -----------------------------------------
-  // ESCAPE HTML
-  // -----------------------------------------
-
-  function escapeHtml(value) {
-
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  }
-
-
-  // -----------------------------------------
-  // LOAD CAMPAIGN
-  // -----------------------------------------
+  /* =========================
+     LOAD CAMPAIGN
+  ========================= */
 
   async function loadCampaign() {
 
     if (!campaignId) {
-
-      content.innerHTML = `
-        <div class="error">
-          ❌ Campaign ID nahi mili.
-        </div>
-      `;
-
+      showError("Campaign ID missing.");
       return;
     }
-
-
-    if (!window.supabaseClient) {
-
-      content.innerHTML = `
-        <div class="error">
-          ❌ Supabase load nahi hua.
-        </div>
-      `;
-
-      return;
-    }
-
 
     const {
       data: campaign,
       error
-    } =
-      await window.supabaseClient
-        .from("campaigns")
-        .select(`
-          id,
-          title,
-          category,
-          description,
-          goal_amount,
-          collected_amount,
-          upi_id,
-          status
-        `)
-        .eq("id", campaignId)
-        .eq("status", "approved")
-        .single();
-
+    } = await window.supabaseClient
+      .from("campaigns")
+      .select(`
+        id,
+        title,
+        category,
+        description,
+        goal_amount,
+        collected_amount,
+        upi_id,
+        status
+      `)
+      .eq("id", campaignId)
+      .eq("status", "approved")
+      .single();
 
     if (error || !campaign) {
-
-      console.error(
-        "Campaign error:",
-        error
-      );
-
-      content.innerHTML = `
-        <div class="error">
-          ❌ Campaign available nahi hai.
-        </div>
-      `;
-
+      showError("Campaign nahi mila.");
       return;
     }
 
-
-    // ---------------------------------------
-    // SAVE DATA
-    // ---------------------------------------
+    campaignUpi =
+      campaign.upi_id;
 
     campaignTitle =
-      campaign.title || "";
+      campaign.title;
 
     campaignGoal =
-      Number(campaign.goal_amount || 0);
+      Number(campaign.goal_amount);
 
     campaignCollected =
       Number(campaign.collected_amount || 0);
 
-    campaignUpi =
-      campaign.upi_id || "";
 
+    document.getElementById("campaignTitle")
+      .textContent =
+      campaign.title;
 
-    if (!campaignUpi) {
+    document.getElementById("campaignInfo")
+      .innerHTML =
+      `${campaign.description || ""}<br><br>
+       Goal: ₹${campaignGoal.toLocaleString("en-IN")}<br>
+       Collected: ₹${campaignCollected.toLocaleString("en-IN")}`;
 
-      content.innerHTML = `
-        <div class="error">
-          ❌ Is campaign ki UPI ID available nahi hai.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    let percentage = 0;
-
-    if (campaignGoal > 0) {
-
-      percentage =
-        Math.round(
-          (campaignCollected / campaignGoal) * 100
-        );
-
-    }
-
-    percentage =
-      Math.min(percentage, 100);
-
-
-    // ---------------------------------------
-    // SHOW PAGE
-    // ---------------------------------------
-
-    content.innerHTML = `
-
-      <div class="card">
-
-        <div class="category">
-          ${escapeHtml(campaign.category)}
-        </div>
-
-
-        <h1>
-          ${escapeHtml(campaign.title)}
-        </h1>
-
-
-        <div class="description">
-          ${escapeHtml(campaign.description)}
-        </div>
-
-
-        <div class="progress-info">
-
-          <span class="collected">
-            ₹${campaignCollected.toLocaleString("en-IN")}
-            collected
-          </span>
-
-          <span class="goal">
-            Goal ₹${campaignGoal.toLocaleString("en-IN")}
-          </span>
-
-        </div>
-
-
-        <div class="progress">
-
-          <div
-            class="progress-bar"
-            style="width:${percentage}%"
-          ></div>
-
-        </div>
-
-
-        <div class="donate-box">
-
-          <h2>
-            ❤️ Donate
-          </h2>
-
-          <p>
-            Aap kitni madad karna chahte hain?
-          </p>
-
-
-          <div class="amount-buttons">
-
-            <button
-              class="amount-button"
-              onclick="selectAmount(10, this)"
-            >
-              ₹10
-            </button>
-
-            <button
-              class="amount-button"
-              onclick="selectAmount(50, this)"
-            >
-              ₹50
-            </button>
-
-            <button
-              class="amount-button"
-              onclick="selectAmount(100, this)"
-            >
-              ₹100
-            </button>
-
-            <button
-              class="amount-button"
-              onclick="selectAmount(500, this)"
-            >
-              ₹500
-            </button>
-
-          </div>
-
-
-          <label class="custom-label">
-            Ya apni amount enter karein
-          </label>
-
-
-          <input
-            type="number"
-            id="customAmount"
-            class="custom-input"
-            placeholder="₹ Amount"
-            min="1"
-            step="1"
-            oninput="customAmountChanged()"
-          >
-
-
-          <button
-            class="donate-button"
-            id="donateButton"
-            onclick="startDonation()"
-          >
-            ❤️ Donate Now
-          </button>
-
-
-          <div class="upi-info">
-
-            Donation directly campaign owner ki
-            UPI ID par jayega.
-
-            <span class="upi-id">
-              ${escapeHtml(campaignUpi)}
-            </span>
-
-          </div>
-
-
-          <div
-            id="message"
-            class="message"
-          ></div>
-
-
-          <div class="notice">
-
-            SubHelp payment ko hold nahi karta.
-            Donate Now par aapke device ka available
-            UPI payment app open hoga.
-
-          </div>
-
-        </div>
-
-      </div>
-
-    `;
-
+    document.getElementById("upiId")
+      .textContent =
+      campaignUpi;
   }
 
 
-  // -----------------------------------------
-  // SELECT AMOUNT
-  // -----------------------------------------
+  /* =========================
+     SELECT AMOUNT
+  ========================= */
 
-  function selectAmount(
-    amount,
-    button
-  ) {
+  function selectAmount(amount) {
 
-    selectedAmount =
-      Number(amount);
+    selectedAmount = Number(amount);
 
-
-    document
-      .querySelectorAll(".amount-button")
-      .forEach(btn => {
-        btn.classList.remove("selected");
-      });
-
-
-    button.classList.add("selected");
-
-
-    const input =
-      document.getElementById("customAmount");
-
-
-    if (input) {
-      input.value = "";
-    }
-
-
-    const message =
-      document.getElementById("message");
-
-
-    if (message) {
-      message.textContent = "";
-    }
-
+    document.getElementById("amount")
+      .value = amount;
   }
 
 
-  // -----------------------------------------
-  // CUSTOM AMOUNT
-  // -----------------------------------------
-
-  function customAmountChanged() {
-
-    const input =
-      document.getElementById("customAmount");
-
-
-    selectedAmount =
-      Number(input.value || 0);
-
-
-    document
-      .querySelectorAll(".amount-button")
-      .forEach(btn => {
-        btn.classList.remove("selected");
-      });
-
-  }
-
-
-  // -----------------------------------------
-  // START DONATION
-  // -----------------------------------------
+  /* =========================
+     START DONATION
+  ========================= */
 
   function startDonation() {
 
-    const message =
-      document.getElementById("message");
-
-    const donateButton =
-      document.getElementById("donateButton");
-
-
-    let amount =
-      Number(selectedAmount);
-
-
-    const customInput =
-      document.getElementById("customAmount");
-
-
-    if (
-      customInput &&
-      customInput.value
-    ) {
-
-      amount =
-        Number(customInput.value);
-
-    }
-
-
-    // ---------------------------------------
-    // VALIDATION
-    // ---------------------------------------
-
-    if (!amount || amount < 1) {
-
-      message.style.color =
-        "#b00020";
-
-      message.textContent =
-        "❌ Please donation amount select karein.";
-
-      return;
-    }
-
-
-    if (!Number.isFinite(amount)) {
-
-      message.style.color =
-        "#b00020";
-
-      message.textContent =
-        "❌ Invalid amount.";
-
-      return;
-    }
-
-
-    if (!Number.isInteger(amount)) {
-
-      message.style.color =
-        "#b00020";
-
-      message.textContent =
-        "❌ Amount whole rupees mein enter karein.";
-
-      return;
-    }
-
-
-    if (amount > 5000) {
-
-      message.style.color =
-        "#b00020";
-
-      message.textContent =
-        "❌ Maximum donation amount ₹5,000 hai.";
-
-      return;
-    }
-
-
-    if (
-      campaignGoal > 0 &&
-      campaignCollected >= campaignGoal
-    ) {
-
-      message.style.color =
-        "#b00020";
-
-      message.textContent =
-        "❌ Ye campaign apna goal complete kar chuki hai.";
-
-      return;
-    }
-
-
-    const remaining =
-      Math.max(
-        campaignGoal - campaignCollected,
-        0
+    const amount =
+      Number(
+        document.getElementById("amount").value
       );
 
+    const remaining =
+      campaignGoal - campaignCollected;
 
-    if (
-      remaining > 0 &&
-      amount > remaining
-    ) {
 
-      message.style.color =
-        "#b00020";
+    if (!amount || amount < 1) {
+      showError("Please donation amount enter karein.");
+      return;
+    }
 
-      message.textContent =
-        "❌ Is campaign ko abhi maximum ₹" +
-        remaining.toLocaleString("en-IN") +
-        " ki zarurat hai.";
+    if (!Number.isInteger(amount)) {
+      showError("Amount whole number hona chahiye.");
+      return;
+    }
 
+    if (amount > 5000) {
+      showError("Maximum donation ₹5,000 hai.");
+      return;
+    }
+
+    if (amount > remaining) {
+      showError(
+        `Campaign ko maximum ₹${remaining.toLocaleString("en-IN")} aur chahiye.`
+      );
+      return;
+    }
+
+    if (!campaignUpi) {
+      showError("Campaign UPI ID available nahi hai.");
       return;
     }
 
 
-    // ---------------------------------------
-    // CREATE UPI LINK
-    // ---------------------------------------
+    selectedAmount = amount;
+
+
+    /*
+      Direct UPI payment
+    */
 
     const upiUrl =
       "upi://pay" +
@@ -806,50 +447,210 @@
       "&cu=INR";
 
 
-    // ---------------------------------------
-    // BUTTON STATE
-    // ---------------------------------------
+    /*
+      Payment ke baad user ko
+      I Have Paid section dikhega.
+    */
 
-    donateButton.disabled = true;
-
-    donateButton.textContent =
-      "Opening UPI...";
-
-
-    message.style.color =
-      "#635bff";
-
-    message.textContent =
-      "⏳ UPI payment app open ho raha hai...";
+    document.getElementById("paidSection")
+      .classList.remove("hidden");
 
 
-    // ---------------------------------------
-    // OPEN UPI
-    // ---------------------------------------
+    document.getElementById("message")
+      .innerHTML =
+      `<div class="success">
+        UPI payment screen open ho rahi hai.<br>
+        Payment complete karne ke baad yahin wapas aakar
+        <b>“I Have Paid”</b> dabayein.
+      </div>`;
 
-    window.location.href =
-      upiUrl;
+
+    window.location.href = upiUrl;
+  }
 
 
-    // ---------------------------------------
-    // FALLBACK
-    // ---------------------------------------
+  /* =========================
+     SUBMIT PAYMENT
+  ========================= */
 
-    setTimeout(() => {
+  async function submitPayment() {
 
-      donateButton.disabled = false;
+    const paidBtn =
+      document.getElementById("paidBtn");
 
-      donateButton.textContent =
-        "❤️ Donate Now";
+    const paidMessage =
+      document.getElementById("paidMessage");
 
-    }, 3000);
+    const utr =
+      document.getElementById("utr")
+        .value
+        .trim();
+
+
+    if (!selectedAmount || selectedAmount < 1) {
+
+      paidMessage.innerHTML =
+        `<div class="error">
+          Donation amount nahi mila.
+        </div>`;
+
+      return;
+    }
+
+
+    paidBtn.disabled = true;
+
+    paidBtn.textContent =
+      "Submitting...";
+
+
+    /*
+      Check logged-in user
+    */
+
+    const {
+      data: {
+        user
+      }
+    } =
+      await window.supabaseClient
+        .auth
+        .getUser();
+
+
+    if (!user) {
+
+      paidMessage.innerHTML =
+        `<div class="error">
+          Please pehle login karein.
+        </div>`;
+
+      paidBtn.disabled = false;
+
+      paidBtn.textContent =
+        "✅ I Have Paid";
+
+      return;
+    }
+
+
+    /*
+      Donation record create
+    */
+
+    const {
+      error
+    } =
+      await window.supabaseClient
+        .from("donations")
+        .insert({
+
+          campaign_id:
+            campaignId,
+
+          donor_user_id:
+            user.id,
+
+          donor_name:
+            user.email || "SubHelp User",
+
+          amount:
+            selectedAmount,
+
+          is_anonymous:
+            false,
+
+          payment_status:
+            "pending",
+
+          payment_reference:
+            utr || null
+        });
+
+
+    if (error) {
+
+      console.error(error);
+
+      paidMessage.innerHTML =
+        `<div class="error">
+          Donation submit nahi ho saki.<br>
+          ${error.message}
+        </div>`;
+
+      paidBtn.disabled = false;
+
+      paidBtn.textContent =
+        "✅ I Have Paid";
+
+      return;
+    }
+
+
+    /*
+      Success
+    */
+
+    paidMessage.innerHTML =
+      `<div class="success">
+        ✅ Donation details submit ho gayi hain.<br><br>
+
+        Amount: <b>₹${selectedAmount}</b><br>
+
+        Status: <b>Pending Verification</b>
+
+        ${utr
+          ? `<br>UTR: <b>${escapeHtml(utr)}</b>`
+          : ""
+        }
+
+        <br><br>
+
+        Campaign owner/admin payment verify karega.
+        Verification ke baad amount campaign me add hoga.
+      </div>`;
+
+
+    paidBtn.disabled = true;
+
+    paidBtn.textContent =
+      "✅ Submitted";
 
   }
 
 
-  // -----------------------------------------
-  // LOAD
-  // -----------------------------------------
+  /* =========================
+     ERROR
+  ========================= */
+
+  function showError(text) {
+
+    document.getElementById("message")
+      .innerHTML =
+      `<div class="error">
+        ${text}
+      </div>`;
+  }
+
+
+  /* =========================
+     HTML ESCAPE
+  ========================= */
+
+  function escapeHtml(text) {
+
+    const div =
+      document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+  }
+
+
+  /* =========================
+     START
+  ========================= */
 
   loadCampaign();
 
