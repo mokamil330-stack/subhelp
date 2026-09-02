@@ -11,11 +11,7 @@
   <script src="supabase-config.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: Arial, sans-serif;
@@ -29,14 +25,8 @@
       border-bottom: 1px solid #eee;
     }
 
-    .logo {
-      font-size: 25px;
-      font-weight: 800;
-    }
-
-    .logo span {
-      color: #635bff;
-    }
+    .logo { font-size: 25px; font-weight: 800; }
+    .logo span { color: #635bff; }
 
     .container {
       max-width: 500px;
@@ -129,6 +119,13 @@
       line-height: 1.5;
       text-align: center;
     }
+
+    .ref-note {
+      display: none;
+      margin-top: 8px;
+      color: #176b36;
+      font-size: 13px;
+    }
   </style>
 </head>
 
@@ -139,7 +136,6 @@
 </header>
 
 <div class="container">
-
   <div class="box">
 
     <h1>👤 Create Account</h1>
@@ -151,12 +147,7 @@
     <form id="registerForm">
 
       <label for="name">Full Name</label>
-      <input
-        type="text"
-        id="name"
-        placeholder="Your full name"
-        required
-      >
+      <input type="text" id="name" placeholder="Your full name" required>
 
       <label for="phone">Mobile Number</label>
       <input
@@ -192,6 +183,10 @@
         maxlength="20"
       >
 
+      <div id="refNote" class="ref-note">
+        🎁 Referral code automatically added.
+      </div>
+
       <button type="submit" id="registerBtn">
         Create Account
       </button>
@@ -211,24 +206,33 @@
     </p>
 
   </div>
-
 </div>
 
 <script>
-
 const form = document.getElementById("registerForm");
 const button = document.getElementById("registerBtn");
 const message = document.getElementById("message");
+const referralInput = document.getElementById("referral");
+const refNote = document.getElementById("refNote");
+
+// Referral link example:
+// register.html?ref=SHA8BB0073
+const urlParams = new URLSearchParams(window.location.search);
+const referralFromUrl = (urlParams.get("ref") || "").trim();
+
+if (referralFromUrl) {
+  referralInput.value = referralFromUrl.toUpperCase();
+  refNote.style.display = "block";
+}
 
 form.addEventListener("submit", async function(event) {
-
   event.preventDefault();
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  const referral = document.getElementById("referral").value.trim();
+  const referral = referralInput.value.trim().toUpperCase();
 
   if (phone.length !== 10 || !/^[0-9]+$/.test(phone)) {
     showMessage("Valid 10 digit mobile number enter karein.", false);
@@ -244,21 +248,22 @@ form.addEventListener("submit", async function(event) {
   button.textContent = "Creating Account...";
 
   try {
+    const { data, error } =
+      await window.supabaseClient.auth.signUp({
+        email: email,
+        password: password,
 
-    const { data, error } = await window.supabaseClient.auth.signUp({
+        options: {
+          data: {
+            full_name: name,
+            phone: phone,
 
-      email: email,
-      password: password,
-
-      options: {
-        data: {
-          full_name: name,
-          phone: phone,
-          referral_code_used: referral || null
+            // Referral code is saved in auth metadata.
+            // Supabase profile trigger will use this to set referred_by.
+            referral_code_used: referral || null
+          }
         }
-      }
-
-    });
+      });
 
     if (error) {
       throw error;
@@ -271,8 +276,14 @@ form.addEventListener("submit", async function(event) {
 
     form.reset();
 
-  } catch (error) {
+    // Keep referral code visible after reset if the signup came
+    // from a referral link.
+    if (referralFromUrl) {
+      referralInput.value = referralFromUrl.toUpperCase();
+      refNote.style.display = "block";
+    }
 
+  } catch (error) {
     console.error(error);
 
     showMessage(
@@ -281,17 +292,12 @@ form.addEventListener("submit", async function(event) {
     );
 
   } finally {
-
     button.disabled = false;
     button.textContent = "Create Account";
-
   }
-
 });
 
-
 function showMessage(text, success) {
-
   message.style.display = "block";
   message.textContent = text;
 
@@ -302,9 +308,7 @@ function showMessage(text, success) {
     message.style.background = "#fff0f0";
     message.style.color = "#b42318";
   }
-
 }
-
 </script>
 
 </body>
