@@ -313,8 +313,13 @@ function createCampaign() {
     return;
   }
 
-  document.getElementById("formSection").style.display = "none";
-  document.getElementById("successSection").style.display = "block";
+ const paymentUrl =
+  "payment.html?title=" +
+  encodeURIComponent(title) +
+  "&amount=" +
+  encodeURIComponent(amount);
+
+window.location.href = paymentUrl;
 }
 
 </script>
