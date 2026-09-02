@@ -366,112 +366,124 @@
 
   const payButton = document.getElementById("payButton");
   const message = document.getElementById("message");
-const useWallet = document.getElementById("useWallet");
-const walletBalanceEl = document.getElementById("walletBalance");
-const paymentBreakdown = document.getElementById("paymentBreakdown");
-const walletUsedEl = document.getElementById("walletUsed");
-const razorpayPayableEl = document.getElementById("razorpayPayable");
+  const useWallet = document.getElementById("useWallet");
+  const walletBalanceEl = document.getElementById("walletBalance");
+  const paymentBreakdown = document.getElementById("paymentBreakdown");
+  const walletUsedEl = document.getElementById("walletUsed");
+  const razorpayPayableEl = document.getElementById("razorpayPayable");
 
-let currentWalletBalance = 0;
+  let currentWalletBalance = 0;
+
+  // -----------------------------------------
+  // LOAD WALLET BALANCE
+  // -----------------------------------------
+
+  async function loadWalletBalance() {
+    try {
+      const {
+        data: userData,
+        error: userError
+      } = await window.supabaseClient.auth.getUser();
+
+      if (userError || !userData.user) {
+        return;
+      }
+
+      const {
+        data: transactions,
+        error
+      } = await window.supabaseClient
+        .from("wallet_transactions")
+        .select("amount, transaction_type")
+        .eq("user_id", userData.user.id);
+
+      if (error) {
+        console.error("Wallet balance error:", error);
+        return;
+      }
+
+      currentWalletBalance = (transactions || []).reduce(
+        (balance, transaction) => {
+          const value = Number(transaction.amount) || 0;
+
+          if (transaction.transaction_type === "credit") {
+            return balance + value;
+          }
+
+          if (transaction.transaction_type === "debit") {
+            return balance - value;
+          }
+
+          return balance;
+        },
+        0
+      );
+
+      currentWalletBalance = Math.max(
+        0,
+        currentWalletBalance
+      );
+
+      walletBalanceEl.textContent =
+        "₹" + currentWalletBalance.toFixed(2);
+
+      updatePaymentBreakdown();
+
+    } catch (error) {
+      console.error("Wallet load error:", error);
+    }
+  }
+
+  // -----------------------------------------
+  // UPDATE PAYMENT BREAKDOWN
+  // -----------------------------------------
+
+  function updatePaymentBreakdown() {
+    if (!useWallet.checked) {
+      paymentBreakdown.style.display = "none";
+      payButton.textContent = "💳 Pay ₹19 & Submit Campaign";
+      return;
+    }
+
+    const walletUsed = Math.min(
+      currentWalletBalance,
+      19
+    );
+
+    const razorpayAmount = Math.max(
+      0,
+      19 - walletUsed
+    );
+
+    walletUsedEl.textContent =
+      "₹" + walletUsed.toFixed(2);
+
+    razorpayPayableEl.textContent =
+      "₹" + razorpayAmount.toFixed(2);
+
+    paymentBreakdown.style.display = "block";
+
+    if (razorpayAmount === 0) {
+      payButton.textContent =
+        "💰 Pay ₹19 Using Wallet";
+    } else {
+      payButton.textContent =
+        "💳 Pay ₹" +
+        razorpayAmount.toFixed(2) +
+        " & Submit Campaign";
+    }
+  }
+
+  useWallet.addEventListener("change", function () {
+    updatePaymentBreakdown();
+  });
+
+  loadWalletBalance();
 
   // -----------------------------------------
   // SHOW CAMPAIGN DETAILS
   // -----------------------------------------
-async function loadWalletBalance() {
-  try {
-    const {
-      data: userData,
-      error: userError
-    } = await window.supabaseClient.auth.getUser();
 
-    if (userError || !userData.user) {
-      return;
-    }
-
-    const {
-      data: transactions,
-      error
-    } = await window.supabaseClient
-      .from("wallet_transactions")
-      .select("amount, transaction_type")
-      .eq("user_id", userData.user.id);
-
-    if (error) {
-      console.error("Wallet balance error:", error);
-      return;
-    }
-
-    currentWalletBalance = (transactions || []).reduce(
-      (balance, transaction) => {
-        const value = Number(transaction.amount) || 0;
-
-        if (transaction.transaction_type === "credit") {
-          return balance + value;
-        }
-
-        if (transaction.transaction_type === "debit") {
-          return balance - value;
-        }
-
-        return balance;
-      },
-      0
-    );
-
-    currentWalletBalance = Math.max(
-      0,
-      currentWalletBalance
-    );
-
-    walletBalanceEl.textContent =
-      "₹" + currentWalletBalance.toFixed(2);
-
-    updatePaymentBreakdown();
-
-  } catch (error) {
-    console.error("Wallet load error:", error);
-  }
-}
-  function updatePaymentBreakdown() {
-  if (!useWallet.checked) {
-    paymentBreakdown.style.display = "none";
-    return;
-  }
-
-  const walletUsed = Math.min(
-    currentWalletBalance,
-    19
-  );
-
-  const razorpayAmount = Math.max(
-    0,
-    19 - walletUsed
-  );
-
-  walletUsedEl.textContent =
-    "₹" + walletUsed.toFixed(2);
-
-  razorpayPayableEl.textContent =
-    "₹" + razorpayAmount.toFixed(2);
-
-  paymentBreakdown.style.display = "block";
-
-  if (razorpayAmount === 0) {
-    payButton.textContent =
-      "💰 Pay ₹19 Using Wallet";
-  } else {
-    payButton.textContent =
-      "💳 Pay ₹" +
-      razorpayAmount.toFixed(2) +
-      " & Submit Campaign";
-  }
-}
-
-  useWallet.addEventListener("change", function () {
-  updatePaymentBreakdown();
-});
-
-loadWalletBalance();
   if (title) {
     document.getElementById("campaignTitle").textContent = title;
   }
@@ -558,17 +570,17 @@ loadWalletBalance();
     // -----------------------------------------
 
     const {
-  data: orderData,
-  error: orderError
-} = await window.supabaseClient.functions.invoke(
-  "create-payment",
-  {
-    body: {
-      campaign_id: campaignId,
-      use_wallet: useWallet.checked
-    }
-  }
-);
+      data: orderData,
+      error: orderError
+    } = await window.supabaseClient.functions.invoke(
+      "create-payment",
+      {
+        body: {
+          campaign_id: campaignId,
+          use_wallet: useWallet.checked
+        }
+      }
+    );
 
 
     if (orderError) {
@@ -608,86 +620,86 @@ loadWalletBalance();
 
       return;
     }
-// -----------------------------------------
-// FULL WALLET PAYMENT
-// -----------------------------------------
 
-if (orderData.payment_method === "wallet") {
+    // -----------------------------------------
+    // FULL WALLET PAYMENT
+    // -----------------------------------------
 
-  message.style.color = "#444";
-  message.textContent =
-    "⏳ Wallet payment process ho raha hai...";
+    if (orderData.payment_method === "wallet") {
 
-  const walletReference =
-    "wallet_" + campaignId + "_" + Date.now();
+      message.style.color = "#444";
+      message.textContent =
+        "⏳ Wallet payment process ho raha hai...";
 
-  const {
-    data: walletData,
-    error: walletError
-  } =
-    await window.supabaseClient.functions.invoke(
-      "wallet-campaign-payment",
-      {
-        body: {
-          campaign_id: campaignId,
-          payment_reference: walletReference
-        }
+      const walletReference =
+        "wallet_" + campaignId + "_" + Date.now();
+
+      const {
+        data: walletData,
+        error: walletError
+      } =
+        await window.supabaseClient.functions.invoke(
+          "wallet-campaign-payment",
+          {
+            body: {
+              campaign_id: campaignId,
+              payment_reference: walletReference
+            }
+          }
+        );
+
+      if (walletError) {
+        console.error(
+          "Wallet payment error:",
+          walletError
+        );
+
+        message.style.color = "#b00020";
+        message.textContent =
+          "❌ Wallet payment complete nahi ho saka: " +
+          walletError.message;
+
+        payButton.disabled = false;
+        updatePaymentBreakdown();
+
+        return;
       }
-    );
 
-  if (walletError) {
-    console.error(
-      "Wallet payment error:",
-      walletError
-    );
+      if (
+        !walletData ||
+        !walletData.success
+      ) {
+        console.error(
+          "Wallet payment response:",
+          walletData
+        );
 
-    message.style.color = "#b00020";
-    message.textContent =
-      "❌ Wallet payment complete nahi ho saka: " +
-      walletError.message;
+        message.style.color = "#b00020";
+        message.textContent =
+          "❌ " +
+          (
+            walletData?.error ||
+            walletData?.message ||
+            "Wallet payment complete nahi ho saka."
+          );
 
-    payButton.disabled = false;
-    updatePaymentBreakdown();
+        payButton.disabled = false;
+        updatePaymentBreakdown();
 
-    return;
-  }
+        return;
+      }
 
-  if (
-    !walletData ||
-    !walletData.success
-  ) {
-    console.error(
-      "Wallet payment response:",
-      walletData
-    );
+      document.getElementById(
+        "paymentSection"
+      ).style.display = "none";
 
-    message.style.color = "#b00020";
-    message.textContent =
-      "❌ " +
-      (
-        walletData?.error ||
-        walletData?.message ||
-        "Wallet payment complete nahi ho saka."
-      );
+      document.getElementById(
+        "successSection"
+      ).style.display = "block";
 
-    payButton.disabled = false;
-    updatePaymentBreakdown();
+      return;
+    }
 
-    return;
-  }
-
-  document.getElementById(
-    "paymentSection"
-  ).style.display = "none";
-
-  document.getElementById(
-    "successSection"
-  ).style.display = "block";
-
-  return;
-}
-
- 
 
     // -----------------------------------------
     // RAZORPAY CHECKOUT
@@ -746,21 +758,24 @@ if (orderData.payment_method === "wallet") {
             "verify-payment",
             {
               body: {
-  razorpay_order_id:
-    response.razorpay_order_id,
 
-  razorpay_payment_id:
-    response.razorpay_payment_id,
+                razorpay_order_id:
+                  response.razorpay_order_id,
 
-  razorpay_signature:
-    response.razorpay_signature,
+                razorpay_payment_id:
+                  response.razorpay_payment_id,
 
-  campaign_id:
-    campaignId,
+                razorpay_signature:
+                  response.razorpay_signature,
 
-  wallet_amount:
-    Number(orderData.wallet_amount) || 0
-}
+                campaign_id:
+                  campaignId,
+
+                wallet_amount:
+                  Number(orderData.wallet_amount) || 0
+              }
+            }
+          );
 
 
         // -------------------------------------
