@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard | SubHelp</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #166534;
+      color: white;
+      padding: 18px 20px;
+    }
+
+    .header-inner {
+      max-width: 1000px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .logout {
+      background: white;
+      color: #166534;
+      border: none;
+      padding: 9px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 25px 18px;
+    }
+
+    .welcome {
+      background: white;
+      padding: 22px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    .welcome h2 {
+      margin: 0 0 8px;
+    }
+
+    .email {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    .icon {
+      font-size: 30px;
+    }
+
+    .card h3 {
+      margin: 10px 0 7px;
+    }
+
+    .card p {
+      color: #666;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 11px 16px;
+      background: #166534;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .wallet {
+      background: #fff;
+      margin-top: 20px;
+      padding: 22px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    .wallet h3 {
+      margin-top: 0;
+    }
+
+    .balance {
+      font-size: 30px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .referral {
+      margin-top: 20px;
+      background: white;
+      padding: 22px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    .progress {
+      margin-top: 12px;
+      background: #eee;
+      height: 12px;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #166534;
+    }
+
+    @media (max-width: 600px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .header-inner {
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">SubHelp</div>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="welcome">
+    <h2>Welcome to SubHelp 👋</h2>
+    <div class="email" id="userEmail">Loading...</div>
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="icon">➕</div>
+      <h3>Create Campaign</h3>
+      <p>Apni genuine zarurat ke liye funding campaign banayein.</p>
+      <a href="create-campaign.html" class="btn">Create Campaign ₹19</a>
+    </div>
+
+    <div class="card">
+      <div class="icon">📢</div>
+      <h3>My Campaigns</h3>
+      <p>Apne banaye hue campaigns aur unka status dekhein.</p>
+      <a href="#" class="btn">My Campaigns</a>
+    </div>
+
+    <div class="card">
+      <div class="icon">🎁</div>
+      <h3>Refer & Earn</h3>
+      <p>Successful referral par ₹10 wallet credit paayein.</p>
+      <a href="#" class="btn">Referral</a>
+    </div>
+
+    <div class="card">
+      <div class="icon">👤</div>
+      <h3>My Profile</h3>
+      <p>Apni profile information manage karein.</p>
+      <a href="#" class="btn">Profile</a>
+    </div>
+
+  </div>
+
+  <div class="wallet">
+    <h3>💰 My Wallet</h3>
+    <div class="balance">₹0</div>
+    <p>Referral rewards aur platform credits yahan dikhenge.</p>
+  </div>
+
+  <div class="referral">
+    <h3>🎁 Referral Progress</h3>
+    <p>Successful referrals: <strong>0 / 5</strong></p>
+
+    <div class="progress">
+      <div class="progress-bar"></div>
+    </div>
+
+    <p style="margin-top:12px;">
+      5 successful referrals complete hone par ₹50 wallet credit.
+    </p>
+  </div>
+
+</div>
+
+<script>
+
+  async function checkUser() {
+
+    const { data, error } =
+      await window.supabaseClient.auth.getUser();
+
+    if (error || !data.user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    document.getElementById("userEmail").textContent =
+      data.user.email;
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", async function() {
+
+    await window.supabaseClient.auth.signOut();
+
+    window.location.href = "index.html";
+
+  });
+
+  checkUser();
+
+</script>
+
+</body>
+</html>
