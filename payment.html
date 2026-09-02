@@ -6,7 +6,9 @@
 
   <title>Pay ₹19 – SubHelp</title>
   <meta name="description" content="Pay the SubHelp campaign creation fee and submit your campaign for verification.">
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -214,14 +216,13 @@
         <span>₹19</span>
       </div>
 
-      <button onclick="demoPayment()">
-        💳 Pay ₹19 & Submit Campaign
-      </button>
+      <button onclick="startPayment()" id="payButton">
+  💳 Pay ₹19 & Submit Campaign
+</button>
 
-      <p class="demo">
-        Demo Mode: Abhi ye test payment hai. Real payment gateway
-        production launch se pehle connect kiya jayega.
-      </p>
+     <p class="demo">
+  🔐 Secure payment powered by Razorpay Test Mode.
+</p>
 
     </div>
 
@@ -261,6 +262,7 @@ const params = new URLSearchParams(window.location.search);
 
 const title = params.get("title");
 const amount = params.get("amount");
+const campaignId = params.get("campaign_id");
 
 if (title) {
   document.getElementById("campaignTitle").textContent = title;
@@ -271,25 +273,159 @@ if (amount) {
 }
 
 
-function demoPayment() {
+async function startPayment() {
 
-  /*
-    IMPORTANT:
-    This is only a DEMO payment.
-    Real payment gateway will be connected later.
-  */
-
-  const button = document.querySelector("button");
+  const button = document.getElementById("payButton");
 
   button.disabled = true;
-  button.textContent = "Processing...";
+  button.textContent = "Order create ho raha hai...";
 
-  setTimeout(function() {
 
-    document.getElementById("paymentSection").style.display = "none";
-    document.getElementById("successSection").style.display = "block";
+  // Check logged-in user
+  const { data: userData, error: userError } =
+    await window.supabaseClient.auth.getUser();
 
-  }, 1200);
+  if (userError || !userData.user) {
+
+    alert("Pehle login karein.");
+
+    window.location.href = "login.html";
+
+    return;
+  }
+
+
+  if (!campaignId) {
+
+    alert("Campaign ID nahi mili. Campaign dobara create karein.");
+
+    button.disabled = false;
+    button.textContent = "💳 Pay ₹19 & Submit Campaign";
+
+    return;
+  }
+
+
+  // Create Razorpay Order
+  const { data, error } =
+    await window.supabaseClient.functions.invoke(
+      "create-payment",
+      {
+        body: {
+          campaign_id: campaignId
+        }
+      }
+    );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Razorpay order create nahi ho saka: " +
+      error.message
+    );
+
+    button.disabled = false;
+    button.textContent = "💳 Pay ₹19 & Submit Campaign";
+
+    return;
+  }
+
+
+  if (!data || !data.order_id) {
+
+    alert("Razorpay Order ID nahi mili.");
+
+    button.disabled = false;
+    button.textContent = "💳 Pay ₹19 & Submit Campaign";
+
+    return;
+  }
+
+
+  // Razorpay Checkout
+  const options = {
+
+    key: data.key_id,
+
+    amount: data.amount,
+
+    currency: data.currency,
+
+    name: "SubHelp",
+
+    description: "Campaign Creation Fee",
+
+    order_id: data.order_id,
+
+    prefill: {
+      email: userData.user.email
+    },
+
+    theme: {
+      color: "#635bff"
+    },
+
+
+    handler: function(response) {
+
+      console.log(
+        "Razorpay Payment:",
+        response
+      );
+
+
+      /*
+        IMPORTANT:
+        Payment ko abhi successful
+        nahi maan rahe hain.
+
+        Next step mein server-side
+        signature verification hoga.
+      */
+
+      document.getElementById("paymentSection").style.display =
+        "none";
+
+      document.getElementById("successSection").style.display =
+        "block";
+
+
+      document.querySelector("#successSection h2").textContent =
+        "Payment Received";
+
+
+      document.querySelector("#successSection .status").textContent =
+        "⏳ Verification Pending";
+
+
+      document.querySelector("#successSection p").textContent =
+        "Razorpay payment response mil gaya hai. Payment verification pending hai.";
+
+    },
+
+
+    modal: {
+
+      ondismiss: function() {
+
+        button.disabled = false;
+
+        button.textContent =
+          "💳 Pay ₹19 & Submit Campaign";
+
+      }
+
+    }
+
+  };
+
+
+  const razorpay = new Razorpay(options);
+
+  razorpay.open();
 
 }
 
