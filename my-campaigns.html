@@ -71,7 +71,7 @@
       background: white;
       padding: 20px;
       border-radius: 15px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.06);
     }
 
@@ -111,13 +111,12 @@
       height: 100%;
       background: #166534;
       border-radius: 20px;
-      transition: width 0.3s ease;
     }
 
     .progress-text {
       font-size: 13px;
       color: #666;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .remaining {
@@ -130,12 +129,9 @@
       display: inline-block;
       padding: 7px 12px;
       border-radius: 20px;
-      background: #fff3cd;
-      color: #856404;
       font-size: 13px;
       font-weight: bold;
       text-transform: capitalize;
-      margin-right: 8px;
     }
 
     .status.approved {
@@ -143,14 +139,14 @@
       color: #065f46;
     }
 
-    .status.rejected {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
     .status.pending {
       background: #fff3cd;
       color: #856404;
+    }
+
+    .status.rejected {
+      background: #fee2e2;
+      color: #991b1b;
     }
 
     .complete {
@@ -175,6 +171,94 @@
       font-weight: bold;
     }
 
+    /* Donation History */
+
+    .donation-section {
+      margin-top: 22px;
+      border-top: 1px solid #eee;
+      padding-top: 18px;
+    }
+
+    .donation-title {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .donation-summary {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .summary-box {
+      flex: 1;
+      min-width: 130px;
+      background: #f5f7fb;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .summary-label {
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .summary-value {
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .donation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .donation-item {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      padding: 12px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .donor {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .donation-date {
+      color: #777;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .donation-amount {
+      font-size: 16px;
+      font-weight: bold;
+      color: #166534;
+      white-space: nowrap;
+    }
+
+    .no-donations {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 10px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .loading-donations {
+      color: #777;
+      font-size: 14px;
+    }
+
     .empty {
       background: white;
       padding: 35px 20px;
@@ -194,6 +278,18 @@
       padding: 15px;
       border-radius: 10px;
     }
+
+    @media (max-width: 600px) {
+
+      .donation-item {
+        align-items: flex-start;
+      }
+
+      .donation-amount {
+        font-size: 15px;
+      }
+
+    }
   </style>
 </head>
 
@@ -202,7 +298,13 @@
 <header>
   <div class="header-inner">
     <div class="logo">SubHelp</div>
-    <a href="dashboard.html" class="back">← Dashboard</a>
+
+    <a
+      href="dashboard.html"
+      class="back"
+    >
+      ← Dashboard
+    </a>
   </div>
 </header>
 
@@ -210,11 +312,17 @@
 
   <h1>📢 My Campaigns</h1>
 
-  <a href="create-campaign.html" class="create-btn">
+  <a
+    href="create-campaign.html"
+    class="create-btn"
+  >
     + Create Campaign ₹19
   </a>
 
-  <div id="campaignList" class="loading">
+  <div
+    id="campaignList"
+    class="loading"
+  >
     Campaigns load ho rahi hain...
   </div>
 
@@ -237,12 +345,17 @@ async function loadCampaigns() {
   } =
     await window.supabaseClient.auth.getUser();
 
-  if (userError || !userData.user) {
-    window.location.href = "login.html";
+  if (
+    userError ||
+    !userData.user
+  ) {
+    window.location.href =
+      "login.html";
     return;
   }
 
-  const user = userData.user;
+  const user =
+    userData.user;
 
   // -----------------------------
   // GET CAMPAIGNS
@@ -264,10 +377,16 @@ async function loadCampaigns() {
         status,
         created_at
       `)
-      .eq("user_id", user.id)
-      .order("created_at", {
-        ascending: false
-      });
+      .eq(
+        "user_id",
+        user.id
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
 
   if (error) {
 
@@ -285,12 +404,17 @@ async function loadCampaigns() {
   // NO CAMPAIGNS
   // -----------------------------
 
-  if (!campaigns || campaigns.length === 0) {
+  if (
+    !campaigns ||
+    campaigns.length === 0
+  ) {
 
     campaignList.innerHTML = `
       <div class="empty">
 
-        <h2>Abhi koi campaign nahi hai 📭</h2>
+        <h2>
+          Abhi koi campaign nahi hai 📭
+        </h2>
 
         <p>
           Apni pehli campaign create karke
@@ -310,25 +434,33 @@ async function loadCampaigns() {
     return;
   }
 
-  // -----------------------------
-  // SHOW CAMPAIGNS
-  // -----------------------------
-
   campaignList.innerHTML = "";
 
-  campaigns.forEach(campaign => {
+  // -----------------------------
+  // EACH CAMPAIGN
+  // -----------------------------
+
+  for (
+    const campaign of campaigns
+  ) {
 
     const goal =
-      Number(campaign.goal_amount || 0);
+      Number(
+        campaign.goal_amount || 0
+      );
 
     const collected =
-      Number(campaign.collected_amount || 0);
+      Number(
+        campaign.collected_amount || 0
+      );
 
     let percentage = 0;
 
     if (goal > 0) {
+
       percentage =
         (collected / goal) * 100;
+
     }
 
     if (percentage > 100) {
@@ -336,16 +468,168 @@ async function loadCampaigns() {
     }
 
     const remaining =
-      Math.max(goal - collected, 0);
+      Math.max(
+        goal - collected,
+        0
+      );
+
+    // -----------------------------
+    // GET DONATIONS
+    // -----------------------------
+
+    const {
+      data: donations,
+      error: donationError
+    } =
+      await window.supabaseClient
+        .from("donations")
+        .select(`
+          id,
+          donor_name,
+          amount,
+          is_anonymous,
+          payment_status,
+          created_at
+        `)
+        .eq(
+          "campaign_id",
+          campaign.id
+        )
+        .eq(
+          "payment_status",
+          "successful"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+    // -----------------------------
+    // DONATION SUMMARY
+    // -----------------------------
+
+    let totalDonations = 0;
+    let donationCount = 0;
+
+    if (
+      !donationError &&
+      donations
+    ) {
+
+      donationCount =
+        donations.length;
+
+      totalDonations =
+        donations.reduce(
+          (sum, donation) =>
+            sum +
+            Number(
+              donation.amount || 0
+            ),
+          0
+        );
+
+    }
+
+    // -----------------------------
+    // DONATION HTML
+    // -----------------------------
+
+    let donationHTML = "";
+
+    if (donationError) {
+
+      donationHTML = `
+        <div class="no-donations">
+          Donation history load nahi ho saki.
+        </div>
+      `;
+
+    } else if (
+      !donations ||
+      donations.length === 0
+    ) {
+
+      donationHTML = `
+        <div class="no-donations">
+          Abhi koi verified donation nahi hai.
+        </div>
+      `;
+
+    } else {
+
+      donationHTML = `
+        <div class="donation-list">
+          ${donations.map(
+            donation => {
+
+              const donor =
+                donation.is_anonymous
+                  ? "Anonymous"
+                  : (
+                      donation.donor_name ||
+                      "Supporter"
+                    );
+
+              const date =
+                new Date(
+                  donation.created_at
+                ).toLocaleString(
+                  "en-IN",
+                  {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                  }
+                );
+
+              return `
+                <div class="donation-item">
+
+                  <div>
+
+                    <div class="donor">
+                      ${escapeHTML(donor)}
+                    </div>
+
+                    <div class="donation-date">
+                      ${escapeHTML(date)}
+                    </div>
+
+                  </div>
+
+                  <div class="donation-amount">
+                    ₹${Number(
+                      donation.amount || 0
+                    ).toLocaleString("en-IN")}
+                  </div>
+
+                </div>
+              `;
+
+            }
+          ).join("")}
+        </div>
+      `;
+
+    }
+
+    // -----------------------------
+    // CAMPAIGN CARD
+    // -----------------------------
 
     const div =
       document.createElement("div");
 
-    div.className = "campaign";
+    div.className =
+      "campaign";
 
-    let statusClass =
-      String(campaign.status || "pending")
-        .toLowerCase();
+    const statusClass =
+      String(
+        campaign.status ||
+        "pending"
+      ).toLowerCase();
 
     let completeHTML = "";
 
@@ -353,53 +637,70 @@ async function loadCampaigns() {
       goal > 0 &&
       collected >= goal
     ) {
+
       completeHTML = `
         <div class="complete">
           🎉 Funding Goal Complete
         </div>
       `;
+
     }
 
     let viewButton = "";
 
     if (
-      campaign.status === "approved"
+      campaign.status ===
+      "approved"
     ) {
+
       viewButton = `
         <a
-          href="campaign.html?id=${encodeURIComponent(campaign.id)}"
+          href="campaign.html?id=${encodeURIComponent(
+            campaign.id
+          )}"
           class="view-btn"
         >
           View Campaign
         </a>
       `;
+
     }
 
     div.innerHTML = `
 
       <h2>
-        ${escapeHTML(campaign.title)}
+        ${escapeHTML(
+          campaign.title
+        )}
       </h2>
 
       <div class="category">
         Category:
         ${escapeHTML(
-          campaign.category || "Other"
+          campaign.category ||
+          "Other"
         )}
       </div>
 
       <div class="description">
         ${escapeHTML(
-          campaign.description || ""
+          campaign.description ||
+          ""
         )}
       </div>
 
       <div class="amount">
 
-        ₹${collected.toLocaleString("en-IN")}
+        ₹${collected.toLocaleString(
+          "en-IN"
+        )}
+
         collected /
 
-        ₹${goal.toLocaleString("en-IN")}
+        ₹${goal.toLocaleString(
+          "en-IN"
+        )}
+
         goal
 
       </div>
@@ -408,7 +709,7 @@ async function loadCampaigns() {
 
         <div
           class="progress"
-          style="width: ${percentage}%"
+          style="width:${percentage}%"
         ></div>
 
       </div>
@@ -421,15 +722,20 @@ async function loadCampaigns() {
 
         ${
           remaining > 0
-            ? `₹${remaining.toLocaleString("en-IN")} remaining`
-            : `₹0 remaining`
+            ? `₹${remaining.toLocaleString(
+                "en-IN"
+              )} remaining`
+            : "₹0 remaining"
         }
 
       </div>
 
-      <span class="status ${statusClass}">
+      <span
+        class="status ${statusClass}"
+      >
         ${escapeHTML(
-          campaign.status || "pending"
+          campaign.status ||
+          "pending"
         )}
       </span>
 
@@ -439,11 +745,53 @@ async function loadCampaigns() {
 
       ${viewButton}
 
+      <!-- DONATION HISTORY -->
+
+      <div class="donation-section">
+
+        <div class="donation-title">
+          💰 Donation History
+        </div>
+
+        <div class="donation-summary">
+
+          <div class="summary-box">
+
+            <div class="summary-label">
+              Total Donations
+            </div>
+
+            <div class="summary-value">
+              ₹${totalDonations.toLocaleString(
+                "en-IN"
+              )}
+            </div>
+
+          </div>
+
+          <div class="summary-box">
+
+            <div class="summary-label">
+              Donors
+            </div>
+
+            <div class="summary-value">
+              ${donationCount}
+            </div>
+
+          </div>
+
+        </div>
+
+        ${donationHTML}
+
+      </div>
+
     `;
 
     campaignList.appendChild(div);
 
-  });
+  }
 
 }
 
