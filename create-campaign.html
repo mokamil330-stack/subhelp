@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Create Campaign – SubHelp</title>
+  <meta name="description" content="Create a SubHelp funding campaign up to ₹5,000.">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #171717;
+    }
+
+    header {
+      background: white;
+      padding: 16px 6%;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #635bff;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 40px auto;
+      padding: 0 18px;
+    }
+
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 18px;
+      border: 1px solid #eee;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 18px 0 8px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #635bff;
+    }
+
+    .limit {
+      background: #f1f0ff;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 8px;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .fee {
+      margin-top: 25px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f7f7f7;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #635bff;
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .notice {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #777;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .success {
+      display: none;
+      text-align: center;
+      padding: 25px 10px;
+    }
+
+    .success-icon {
+      font-size: 55px;
+      margin-bottom: 10px;
+    }
+
+    .success h2 {
+      margin-bottom: 10px;
+    }
+
+    .success p {
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #635bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .box {
+        padding: 22px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">Sub<span>Help</span></div>
+</header>
+
+<div class="container">
+
+  <div class="box">
+
+    <div id="formSection">
+
+      <h1>🆘 Create Your Campaign</h1>
+
+      <p class="subtitle">
+        Apni genuine zarurat ke liye campaign create karein.
+        Maximum funding goal ₹5,000 hai.
+      </p>
+
+      <label for="title">Campaign Title</label>
+      <input
+        type="text"
+        id="title"
+        placeholder="Example: School Fee ke liye Help"
+        maxlength="80"
+      >
+
+      <label for="category">Category</label>
+
+      <select id="category">
+        <option value="">Select Category</option>
+        <option>Education</option>
+        <option>Emergency</option>
+        <option>Food</option>
+        <option>Family Support</option>
+        <option>Travel Emergency</option>
+        <option>Other</option>
+      </select>
+
+      <label for="amount">Funding Amount</label>
+
+      <input
+        type="number"
+        id="amount"
+        placeholder="Example: 1500"
+        min="10"
+        max="5000"
+      >
+
+      <div class="limit">
+        💡 Minimum ₹10 aur maximum ₹5,000.
+      </div>
+
+      <label for="description">Why do you need this help?</label>
+
+      <textarea
+        id="description"
+        placeholder="Apni zarurat ko simple words mein explain karein..."
+        maxlength="1000"
+      ></textarea>
+
+      <label for="upi">Your UPI ID</label>
+
+      <input
+        type="text"
+        id="upi"
+        placeholder="example@upi"
+      >
+
+      <div class="fee">
+        <span>Campaign Creation Fee</span>
+        <span>₹19</span>
+      </div>
+
+      <button onclick="createCampaign()">
+        Continue – ₹19
+      </button>
+
+      <p class="notice">
+        Campaign live hone se pehle SubHelp verification process se guzrega.
+      </p>
+
+    </div>
+
+
+    <div class="success" id="successSection">
+
+      <div class="success-icon">🎉</div>
+
+      <h2>Campaign Ready!</h2>
+
+      <p>
+        Tumhari campaign details successfully submit ho gayi hain.
+        Ab ₹19 payment ke baad campaign verification ke liye jayega.
+      </p>
+
+      <a href="index.html" class="back">
+        ← Back to SubHelp
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+function createCampaign() {
+
+  const title = document.getElementById("title").value.trim();
+  const category = document.getElementById("category").value;
+  const amount = Number(document.getElementById("amount").value);
+  const description = document.getElementById("description").value.trim();
+  const upi = document.getElementById("upi").value.trim();
+
+  if (!title) {
+    alert("Campaign title enter karein.");
+    return;
+  }
+
+  if (!category) {
+    alert("Category select karein.");
+    return;
+  }
+
+  if (!amount || amount < 10 || amount > 5000) {
+    alert("Funding amount ₹10 se ₹5,000 ke beech hona chahiye.");
+    return;
+  }
+
+  if (!description) {
+    alert("Apni need ka reason enter karein.");
+    return;
+  }
+
+  if (!upi) {
+    alert("UPI ID enter karein.");
+    return;
+  }
+
+  document.getElementById("formSection").style.display = "none";
+  document.getElementById("successSection").style.display = "block";
+}
+
+</script>
+
+</body>
+</html>
