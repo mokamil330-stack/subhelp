@@ -686,105 +686,108 @@
   // -----------------------------------------
 
   async function updateCampaign(
-    campaignId,
-    newStatus,
-    clickedButton
-  ) {
+  campaignId,
+  newStatus,
+  clickedButton
+) {
 
-    const confirmText =
-      newStatus === "approved"
-        ? "Kya aap is campaign ko APPROVE karna chahte hain?"
-        : "Kya aap is campaign ko REJECT karna chahte hain?";
+  const confirmText =
+    newStatus === "approved"
+      ? "Kya aap is campaign ko APPROVE karna chahte hain?"
+      : "Kya aap is campaign ko REJECT karna chahte hain?";
 
+  if (!confirm(confirmText)) {
+    return;
+  }
 
-    if (!confirm(confirmText)) {
-      return;
-    }
+  // Disable buttons
+  const card =
+    clickedButton.closest(".card");
 
+  const buttons =
+    card.querySelectorAll("button");
 
-    // Disable buttons
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
 
-    const card =
-      clickedButton.closest(".card");
-
-    const buttons =
-      card.querySelectorAll("button");
-
-
-    buttons.forEach(button => {
-      button.disabled = true;
-    });
-
-
-    // ---------------------------------------
-    // UPDATE DATABASE
-    // ---------------------------------------
-
-    const {
-      error
-    } =
-      await window.supabaseClient
-        .from("campaigns")
-        .update({
-          status: newStatus
-        })
-        .eq("id", campaignId);
-
-
-    if (error) {
-
-      console.error(
-        "Status update error:",
-        error
-      );
-
-      showMessage(
-        "❌ Status update nahi ho saka: " +
-        error.message,
-        "error"
-      );
-
-
-      buttons.forEach(button => {
-        button.disabled = false;
+  // Update through secure admin RPC
+  const {
+    data,
+    error
+  } =
+    await window.supabaseClient
+      .rpc("admin_update_campaign_status", {
+        p_campaign_id: campaignId,
+        p_status: newStatus
       });
 
+  if (error) {
 
-      return;
+    console.error(
+      "Status update error:",
+      error
+    );
 
-    }
+    showMessage(
+      "❌ Status update nahi ho saka: " +
+      error.message,
+      "error"
+    );
 
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
 
-    // ---------------------------------------
-    // SUCCESS
-    // ---------------------------------------
+    return;
+  }
 
-    if (newStatus === "approved") {
+  // RPC returned failure
+  if (!data || !data.success) {
 
-      showMessage(
-        "✅ Campaign successfully approved.",
-        "success"
-      );
+    console.error(
+      "Admin RPC response:",
+      data
+    );
 
-    } else {
+    showMessage(
+      "❌ " +
+      (
+        data?.message ||
+        "Campaign status update nahi ho saka."
+      ),
+      "error"
+    );
 
-      showMessage(
-        "❌ Campaign rejected.",
-        "success"
-      );
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
 
-    }
+    return;
+  }
 
+  // SUCCESS
+  if (newStatus === "approved") {
 
-    // Reload
+    showMessage(
+      "✅ Campaign successfully approved.",
+      "success"
+    );
 
-    setTimeout(() => {
-      loadCampaigns();
-    }, 500);
+  } else {
+
+    showMessage(
+      "❌ Campaign rejected.",
+      "success"
+    );
 
   }
 
-
+  // Reload
+  setTimeout(() => {
+    loadCampaigns();
+  }, 500);
+}
 
   // -----------------------------------------
   // LOAD PENDING DONATIONS
