@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin Panel – SubHelp</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #171717;
+    }
+
+    header {
+      background: white;
+      padding: 16px 6%;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #635bff;
+    }
+
+    .admin-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 18px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .message {
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+      font-weight: 600;
+    }
+
+    .error {
+      background: #fff0f0;
+      color: #b00020;
+    }
+
+    .success {
+      background: #eefbf1;
+      color: #176b2c;
+    }
+
+    .campaigns {
+      display: grid;
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .title {
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .status {
+      background: #fff4cc;
+      color: #8a6500;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      height: fit-content;
+    }
+
+    .row {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      line-height: 1.5;
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .value {
+      font-weight: 600;
+      margin-top: 3px;
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .actions button {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .approve {
+      background: #16833b;
+      color: white;
+    }
+
+    .reject {
+      background: #d93025;
+      color: white;
+    }
+
+    .empty {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 18px;
+      padding: 45px 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .empty-icon {
+      font-size: 45px;
+      margin-bottom: 12px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    @media (max-width: 600px) {
+
+      .top {
+        flex-direction: column;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+
+  <div class="logo">
+    Sub<span>Help</span>
+  </div>
+
+  <div class="admin-label">
+    Admin Panel
+  </div>
+
+</header>
+
+
+<div class="container">
+
+  <h1>Campaign Verification</h1>
+
+  <p class="subtitle">
+    Pending campaigns ko review karke approve ya reject karein.
+  </p>
+
+
+  <div id="message" class="message"></div>
+
+
+  <div id="campaigns" class="campaigns">
+
+    <div class="loading">
+      Campaigns load ho rahi hain...
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  const container =
+    document.getElementById("campaigns");
+
+  const message =
+    document.getElementById("message");
+
+
+  // -----------------------------------------
+  // SHOW MESSAGE
+  // -----------------------------------------
+
+  function showMessage(text, type) {
+
+    message.textContent = text;
+
+    message.className =
+      "message " + type;
+
+    message.style.display = "block";
+
+    setTimeout(() => {
+      message.style.display = "none";
+    }, 4000);
+  }
+
+
+  // -----------------------------------------
+  // ESCAPE HTML
+  // -----------------------------------------
+
+  function escapeHtml(value) {
+
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  // -----------------------------------------
+  // LOAD PENDING CAMPAIGNS
+  // -----------------------------------------
+
+  async function loadCampaigns() {
+
+    if (!window.supabaseClient) {
+
+      container.innerHTML = `
+        <div class="empty">
+          ❌ Supabase load nahi hua.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    const {
+      data: userData,
+      error: userError
+    } =
+      await window.supabaseClient.auth.getUser();
+
+
+    if (userError || !userData.user) {
+
+      container.innerHTML = `
+        <div class="empty">
+          ❌ Admin login required.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await window.supabaseClient
+        .from("campaigns")
+        .select(`
+          id,
+          title,
+          category,
+          description,
+          goal_amount,
+          collected_amount,
+          upi_id,
+          status,
+          created_at,
+          user_id
+        `)
+        .eq("status", "pending")
+        .order("created_at", {
+          ascending: false
+        });
+
+
+    if (error) {
+
+      console.error(
+        "Admin campaign error:",
+        error
+      );
+
+      container.innerHTML = `
+        <div class="empty">
+          ❌ Campaigns load nahi ho pa rahi hain.
+          <br><br>
+          ${escapeHtml(error.message)}
+        </div>
+      `;
+
+      return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+      container.innerHTML = `
+        <div class="empty">
+
+          <div class="empty-icon">
+            ✅
+          </div>
+
+          <h2>
+            Koi pending campaign nahi hai
+          </h2>
+
+          <p style="margin-top:10px;">
+            Sabhi campaigns review ho chuki hain.
+          </p>
+
+        </div>
+      `;
+
+      return;
+    }
+
+
+    container.innerHTML = "";
+
+
+    data.forEach(campaign => {
+
+      const card =
+        document.createElement("div");
+
+      card.className = "card";
+
+
+      card.innerHTML = `
+
+        <div class="top">
+
+          <div class="title">
+            ${escapeHtml(campaign.title)}
+          </div>
+
+          <div class="status">
+            PENDING
+          </div>
+
+        </div>
+
+
+        <div class="row">
+
+          <div class="label">
+            Category
+          </div>
+
+          <div class="value">
+            ${escapeHtml(campaign.category)}
+          </div>
+
+        </div>
+
+
+        <div class="row">
+
+          <div class="label">
+            Description
+          </div>
+
+          <div class="value">
+            ${escapeHtml(campaign.description)}
+          </div>
+
+        </div>
+
+
+        <div class="row">
+
+          <div class="label">
+            Funding Goal
+          </div>
+
+          <div class="value">
+            ₹${Number(campaign.goal_amount || 0)
+              .toLocaleString("en-IN")}
+          </div>
+
+        </div>
+
+
+        <div class="row">
+
+          <div class="label">
+            UPI ID
+          </div>
+
+          <div class="value">
+            ${escapeHtml(campaign.upi_id)}
+          </div>
+
+        </div>
+
+
+        <div class="row">
+
+          <div class="label">
+            Campaign ID
+          </div>
+
+          <div class="value">
+            ${escapeHtml(campaign.id)}
+          </div>
+
+        </div>
+
+
+        <div class="actions">
+
+          <button
+            class="approve"
+            onclick="updateCampaign('${campaign.id}', 'approved')"
+          >
+            ✅ Approve
+          </button>
+
+          <button
+            class="reject"
+            onclick="updateCampaign('${campaign.id}', 'rejected')"
+          >
+            ❌ Reject
+          </button>
+
+        </div>
+
+      `;
+
+
+      container.appendChild(card);
+
+    });
+
+  }
+
+
+  // -----------------------------------------
+  // UPDATE CAMPAIGN STATUS
+  // -----------------------------------------
+
+  async function updateCampaign(
+    campaignId,
+    newStatus
+  ) {
+
+    const confirmText =
+      newStatus === "approved"
+        ? "Kya aap is campaign ko APPROVE karna chahte hain?"
+        : "Kya aap is campaign ko REJECT karna chahte hain?";
+
+
+    if (!confirm(confirmText)) {
+      return;
+    }
+
+
+    const {
+      error
+    } =
+      await window.supabaseClient
+        .from("campaigns")
+        .update({
+          status: newStatus
+        })
+        .eq("id", campaignId);
+
+
+    if (error) {
+
+      console.error(
+        "Status update error:",
+        error
+      );
+
+      showMessage(
+        "❌ Status update nahi ho saka: " +
+        error.message,
+        "error"
+      );
+
+      return;
+    }
+
+
+    if (newStatus === "approved") {
+
+      showMessage(
+        "✅ Campaign successfully approved.",
+        "success"
+      );
+
+    } else {
+
+      showMessage(
+        "❌ Campaign rejected.",
+        "success"
+      );
+
+    }
+
+
+    loadCampaigns();
+
+  }
+
+
+  // -----------------------------------------
+  // START
+  // -----------------------------------------
+
+  loadCampaigns();
+
+</script>
+
+</body>
+</html>
