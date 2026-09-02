@@ -636,7 +636,6 @@ if (orderData.payment_method === "wallet") {
     );
 
   if (walletError) {
-
     console.error(
       "Wallet payment error:",
       walletError
@@ -653,8 +652,10 @@ if (orderData.payment_method === "wallet") {
     return;
   }
 
-  if (!walletData || !walletData.success) {
-
+  if (
+    !walletData ||
+    !walletData.success
+  ) {
     console.error(
       "Wallet payment response:",
       walletData
@@ -674,6 +675,17 @@ if (orderData.payment_method === "wallet") {
 
     return;
   }
+
+  document.getElementById(
+    "paymentSection"
+  ).style.display = "none";
+
+  document.getElementById(
+    "successSection"
+  ).style.display = "block";
+
+  return;
+}
 
   // -----------------------------------------
   // WALLET PAYMENT SUCCESS
