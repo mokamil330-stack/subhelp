@@ -28,7 +28,7 @@
     }
 
     .header-inner {
-      max-width: 1000px;
+      max-width: 900px;
       margin: auto;
       display: flex;
       justify-content: space-between;
@@ -36,7 +36,7 @@
     }
 
     .logo {
-      font-size: 25px;
+      font-size: 26px;
       font-weight: bold;
     }
 
@@ -44,14 +44,14 @@
       background: white;
       color: #166534;
       border: none;
-      padding: 9px 15px;
+      padding: 9px 14px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 900px;
       margin: auto;
       padding: 25px 18px;
     }
@@ -60,12 +60,13 @@
       background: white;
       padding: 22px;
       border-radius: 15px;
-      margin-bottom: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
     }
 
-    .welcome h2 {
+    .welcome h1 {
       margin: 0 0 8px;
+      font-size: 25px;
     }
 
     .email {
@@ -73,91 +74,119 @@
       font-size: 14px;
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-    }
-
-    .card {
-      background: white;
-      padding: 22px;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-    }
-
-    .icon {
-      font-size: 30px;
-    }
-
-    .card h3 {
-      margin: 10px 0 7px;
-    }
-
-    .card p {
-      color: #666;
-      margin: 0;
-      line-height: 1.5;
-    }
-
-    .btn {
+    .create-btn {
       display: inline-block;
       margin-top: 15px;
-      padding: 11px 16px;
       background: #166534;
       color: white;
+      padding: 12px 17px;
+      border-radius: 9px;
       text-decoration: none;
-      border-radius: 8px;
       font-weight: bold;
     }
 
-    .wallet {
-      background: #fff;
-      margin-top: 20px;
-      padding: 22px;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
-    .wallet h3 {
-      margin-top: 0;
-    }
-
-    .balance {
-      font-size: 30px;
-      font-weight: bold;
-      margin-top: 8px;
-    }
-
-    .referral {
-      margin-top: 20px;
+    .stat {
       background: white;
-      padding: 22px;
+      padding: 18px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .stat-icon {
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
       border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+      margin-bottom: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
 
-    .progress {
-      margin-top: 12px;
-      background: #eee;
-      height: 12px;
-      border-radius: 20px;
-      overflow: hidden;
+    .section h2 {
+      margin: 0 0 15px;
+      font-size: 19px;
     }
 
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background: #166534;
+    .menu {
+      display: grid;
+      gap: 10px;
+    }
+
+    .menu a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #222;
+      font-weight: bold;
+    }
+
+    .menu a:hover {
+      background: #f1f5f9;
+    }
+
+    .coming {
+      padding: 14px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .coming-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .coming-text {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 15px;
+      border-radius: 10px;
     }
 
     @media (max-width: 600px) {
-      .cards {
-        grid-template-columns: 1fr;
+      .stats {
+        grid-template-columns: 1fr 1fr;
       }
 
-      .header-inner {
-        gap: 10px;
+      .stat-value {
+        font-size: 19px;
       }
     }
   </style>
@@ -167,96 +196,442 @@
 
 <header>
   <div class="header-inner">
-    <div class="logo">SubHelp</div>
-    <button class="logout" id="logoutBtn">Logout</button>
+
+    <div class="logo">
+      SubHelp
+    </div>
+
+    <button
+      class="logout"
+      onclick="logout()"
+    >
+      Logout
+    </button>
+
   </div>
 </header>
 
+
 <div class="container">
 
+  <!-- WELCOME -->
+
   <div class="welcome">
-    <h2>Welcome to SubHelp 👋</h2>
-    <div class="email" id="userEmail">Loading...</div>
-  </div>
 
-  <div class="cards">
+    <h1>
+      👋 Welcome to SubHelp
+    </h1>
 
-    <div class="card">
-      <div class="icon">➕</div>
-      <h3>Create Campaign</h3>
-      <p>Apni genuine zarurat ke liye funding campaign banayein.</p>
-      <a href="create-campaign.html" class="btn">Create Campaign ₹19</a>
+    <div
+      class="email"
+      id="userEmail"
+    >
+      Loading...
     </div>
 
-    <div class="card">
-      <div class="icon">📢</div>
-      <h3>My Campaigns</h3>
-      <p>Apne banaye hue campaigns aur unka status dekhein.</p>
-      <a href="my-campaigns.html" class="btn">My Campaigns</a>
-    </div>
-
-    <div class="card">
-      <div class="icon">🎁</div>
-      <h3>Refer & Earn</h3>
-      <p>Successful referral par ₹10 wallet credit paayein.</p>
-      <a href="#" class="btn">Referral</a>
-    </div>
-
-    <div class="card">
-      <div class="icon">👤</div>
-      <h3>My Profile</h3>
-      <p>Apni profile information manage karein.</p>
-      <a href="#" class="btn">Profile</a>
-    </div>
+    <a
+      href="create-campaign.html"
+      class="create-btn"
+    >
+      + Create Campaign ₹19
+    </a>
 
   </div>
 
-  <div class="wallet">
-    <h3>💰 My Wallet</h3>
-    <div class="balance">₹0</div>
-    <p>Referral rewards aur platform credits yahan dikhenge.</p>
-  </div>
 
-  <div class="referral">
-    <h3>🎁 Referral Progress</h3>
-    <p>Successful referrals: <strong>0 / 5</strong></p>
+  <!-- LIVE STATS -->
 
-    <div class="progress">
-      <div class="progress-bar"></div>
+  <div
+    id="stats"
+    class="stats"
+  >
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        📢
+      </div>
+
+      <div class="stat-label">
+        My Campaigns
+      </div>
+
+      <div
+        class="stat-value"
+        id="campaignCount"
+      >
+        0
+      </div>
+
     </div>
 
-    <p style="margin-top:12px;">
-      5 successful referrals complete hone par ₹50 wallet credit.
-    </p>
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        💰
+      </div>
+
+      <div class="stat-label">
+        Total Raised
+      </div>
+
+      <div
+        class="stat-value"
+        id="totalRaised"
+      >
+        ₹0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        🤝
+      </div>
+
+      <div class="stat-label">
+        Verified Donations
+      </div>
+
+      <div
+        class="stat-value"
+        id="donationCount"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        🟢
+      </div>
+
+      <div class="stat-label">
+        Approved Campaigns
+      </div>
+
+      <div
+        class="stat-value"
+        id="approvedCount"
+      >
+        0
+      </div>
+
+    </div>
+
   </div>
+
+
+  <!-- CAMPAIGN MENU -->
+
+  <div class="section">
+
+    <h2>
+      📢 Campaign
+    </h2>
+
+    <div class="menu">
+
+      <a href="my-campaigns.html">
+        <span>
+          My Campaigns
+        </span>
+
+        <span>
+          →
+        </span>
+      </a>
+
+      <a href="campaigns.html">
+        <span>
+          Help Someone
+        </span>
+
+        <span>
+          →
+        </span>
+      </a>
+
+      <a href="create-campaign.html">
+        <span>
+          Create New Campaign
+        </span>
+
+        <span>
+          →
+        </span>
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <!-- REFERRAL -->
+
+  <div class="section">
+
+    <h2>
+      🎁 Referral & Wallet
+    </h2>
+
+    <div class="coming">
+
+      <div class="coming-title">
+        🤝 Referral Program
+      </div>
+
+      <div class="coming-text">
+        Referral system jaldi available hoga.
+      </div>
+
+    </div>
+
+
+    <div class="coming">
+
+      <div class="coming-title">
+        💳 Wallet
+      </div>
+
+      <div class="coming-text">
+        Referral rewards yahan show honge.
+      </div>
+
+    </div>
+
+  </div>
+
 
 </div>
 
+
 <script>
 
-  async function checkUser() {
+async function loadDashboard() {
 
-    const { data, error } =
-      await window.supabaseClient.auth.getUser();
+  // -----------------------------
+  // CHECK LOGIN
+  // -----------------------------
 
-    if (error || !data.user) {
-      window.location.href = "login.html";
-      return;
-    }
+  const {
+    data: userData,
+    error: userError
+  } =
+    await window.supabaseClient.auth.getUser();
 
-    document.getElementById("userEmail").textContent =
-      data.user.email;
+  if (
+    userError ||
+    !userData.user
+  ) {
+
+    window.location.href =
+      "login.html";
+
+    return;
   }
 
-  document.getElementById("logoutBtn").addEventListener("click", async function() {
+  const user =
+    userData.user;
 
-    await window.supabaseClient.auth.signOut();
 
-    window.location.href = "index.html";
+  // -----------------------------
+  // SHOW EMAIL
+  // -----------------------------
 
-  });
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    user.email || "User";
 
-  checkUser();
+
+  // -----------------------------
+  // GET CAMPAIGNS
+  // -----------------------------
+
+  const {
+    data: campaigns,
+    error: campaignError
+  } =
+    await window.supabaseClient
+      .from("campaigns")
+      .select(`
+        id,
+        status,
+        collected_amount
+      `)
+      .eq(
+        "user_id",
+        user.id
+      );
+
+
+  if (campaignError) {
+
+    console.error(
+      "Campaign error:",
+      campaignError
+    );
+
+    document.getElementById(
+      "campaignCount"
+    ).textContent = "0";
+
+    return;
+  }
+
+
+  const campaignList =
+    campaigns || [];
+
+
+  // -----------------------------
+  // CAMPAIGN COUNT
+  // -----------------------------
+
+  document.getElementById(
+    "campaignCount"
+  ).textContent =
+    campaignList.length;
+
+
+  // -----------------------------
+  // APPROVED COUNT
+  // -----------------------------
+
+  const approved =
+    campaignList.filter(
+      campaign =>
+        campaign.status ===
+        "approved"
+    );
+
+
+  document.getElementById(
+    "approvedCount"
+  ).textContent =
+    approved.length;
+
+
+  // -----------------------------
+  // TOTAL RAISED
+  // -----------------------------
+
+  const totalRaised =
+    campaignList.reduce(
+      (total, campaign) =>
+        total +
+        Number(
+          campaign.collected_amount ||
+          0
+        ),
+      0
+    );
+
+
+  document.getElementById(
+    "totalRaised"
+  ).textContent =
+    "₹" +
+    totalRaised.toLocaleString(
+      "en-IN"
+    );
+
+
+  // -----------------------------
+  // VERIFIED DONATIONS
+  // -----------------------------
+
+  if (
+    campaignList.length === 0
+  ) {
+
+    document.getElementById(
+      "donationCount"
+    ).textContent = "0";
+
+    return;
+  }
+
+
+  const campaignIds =
+    campaignList.map(
+      campaign =>
+        campaign.id
+    );
+
+
+  const {
+    data: donations,
+    error: donationError
+  } =
+    await window.supabaseClient
+      .from("donations")
+      .select(`
+        id,
+        campaign_id
+      `)
+      .in(
+        "campaign_id",
+        campaignIds
+      )
+      .eq(
+        "payment_status",
+        "successful"
+      );
+
+
+  if (donationError) {
+
+    console.error(
+      "Donation error:",
+      donationError
+    );
+
+    document.getElementById(
+      "donationCount"
+    ).textContent = "0";
+
+    return;
+  }
+
+
+  document.getElementById(
+    "donationCount"
+  ).textContent =
+    donations
+      ? donations.length
+      : 0;
+
+}
+
+
+// -----------------------------
+// LOGOUT
+// -----------------------------
+
+async function logout() {
+
+  await window.supabaseClient
+    .auth
+    .signOut();
+
+  window.location.href =
+    "login.html";
+}
+
+
+// -----------------------------
+// START
+// -----------------------------
+
+loadDashboard();
 
 </script>
 
