@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referral & Wallet - SubHelp</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e5e7eb;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:800;color:#166534}.back{text-decoration:none;color:#166534;font-weight:700}
+.container{max-width:760px;margin:auto;padding:20px 15px 40px}.hero{background:#166534;color:#fff;border-radius:18px;padding:24px 20px;margin-bottom:15px}
+.hero h1{margin:0 0 8px;font-size:27px}.hero p{margin:0;opacity:.92;line-height:1.5}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:15px}.card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:15px}
+.stat-title{color:#667085;font-size:13px;margin-bottom:7px}.stat-value{font-size:25px;font-weight:800}
+.ref-box{display:flex;gap:8px;margin-top:12px}.ref-link{flex:1;min-width:0;background:#f1f5f9;border:1px solid #dbe3ec;border-radius:10px;padding:12px;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+button{border:0;border-radius:10px;padding:12px 15px;font-weight:700;cursor:pointer;background:#166534;color:#fff}.copy-btn{white-space:nowrap}
+.progress-wrap{margin-top:13px}.progress-bg{height:11px;background:#e5e7eb;border-radius:20px;overflow:hidden}.progress{height:100%;width:0%;background:#16a34a;transition:width .3s}
+.muted{color:#667085;font-size:14px}.reward{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid #eef0f3}.reward:last-child{border-bottom:0}
+.empty{text-align:center;padding:15px 5px;color:#667085}.status{padding:11px 13px;border-radius:10px;background:#f0fdf4;color:#166534;margin-top:12px;font-size:14px;display:none}
+.locked{background:#fff7ed!important;color:#9a3412!important}.error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-bottom:15px;display:none}
+@media(max-width:500px){.ref-box{flex-direction:column}.copy-btn{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="logo">SubHelp</div><a class="back" href="dashboard.html">← Dashboard</a></header>
+<div class="container">
+<div id="errorBox" class="error"></div>
+<section class="hero"><h1>Referral Program 🎁</h1><p>Apna referral link share karo aur successful referral par ₹10 wallet reward pao.</p></section>
+
+<div class="stats">
+<div class="card"><div class="stat-title">Wallet Balance</div><div class="stat-value" id="walletBalance">₹0</div></div>
+<div class="card"><div class="stat-title">Successful Referrals</div><div class="stat-value"><span id="referralCount">0</span> / 5</div></div>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">Your Referral Link</h2>
+<div class="muted">Is link ko WhatsApp, Instagram, Facebook ya kisi bhi platform par share karo.</div>
+<div class="ref-box"><div id="referralLink" class="ref-link">Loading...</div><button class="copy-btn" onclick="copyReferralLink()">Copy Link</button></div>
+<div id="copyStatus" class="status">Referral link copied ✅</div>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">Current Cycle</h2>
+<div id="cycleStatus" class="muted">Loading...</div>
+<div class="progress-wrap"><div class="progress-bg"><div id="progressBar" class="progress"></div></div></div>
+<div style="margin-top:10px;font-weight:700">₹10 per successful referral</div>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">Referral History</h2>
+<div id="history"><div class="empty">Loading...</div></div>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">How it works?</h2>
+<div class="reward"><span>1️⃣ Apna referral link share karo</span></div>
+<div class="reward"><span>2️⃣ New user tumhare link se signup kare</span></div>
+<div class="reward"><span>3️⃣ Wo mobile verify karke ₹19 campaign fee pay kare</span></div>
+<div class="reward"><span>4️⃣ Campaign successfully submit/approve hone par referral complete hoga</span></div>
+<div class="reward"><strong>🎁 Har successful referral = ₹10 wallet credit</strong></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://ojvzqsxfdaknxdawffhu.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="YOUR_FULL_PUBLISHABLE_KEY";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let referralLinkValue="";
+
+function showError(message){const b=document.getElementById("errorBox");b.textContent=message;b.style.display="block"}
+function hideError(){document.getElementById("errorBox").style.display="none"}
+
+async function loadReferralPage(){
+ hideError();
+ const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+ if(userError||!user){window.location.href="login.html";return}
+
+ const {data:profile,error:profileError}=await supabaseClient.from("profiles")
+ .select("referral_code,referral_cycle,referral_count,referral_unlocked").eq("id",user.id).single();
+
+ if(profileError){showError("Profile load nahi ho saka: "+profileError.message);return}
+ if(!profile.referral_code){showError("Referral code abhi available nahi hai.");return}
+
+ referralLinkValue=window.location.origin+window.location.pathname.replace("referral.html","")+"register.html?ref="+encodeURIComponent(profile.referral_code);
+ document.getElementById("referralLink").textContent=referralLinkValue;
+
+ const count=Number(profile.referral_count||0);
+ document.getElementById("referralCount").textContent=count;
+ document.getElementById("progressBar").style.width=Math.min(count/5*100,100)+"%";
+
+ const cycle=document.getElementById("cycleStatus");
+ if(!profile.referral_unlocked){
+  cycle.textContent="Referral program locked hai. Apni campaign create karke ₹19 fee complete karo.";
+  cycle.classList.add("locked");
+ }else if(count>=5){
+  cycle.textContent="Current cycle complete 🎉 Next cycle ke liye nayi campaign + ₹19 fee required hai.";
+  cycle.classList.add("locked");
+ }else{
+  cycle.textContent="Referral program active — "+(5-count)+" successful referral aur chahiye.";
+ }
+
+ const {data:transactions,error:walletError}=await supabaseClient.from("wallet_transactions")
+ .select("amount,transaction_type").eq("user_id",user.id);
+ if(walletError){showError("Wallet load nahi ho saka: "+walletError.message);return}
+
+ let balance=0;
+ (transactions||[]).forEach(tx=>{
+  const amount=Number(tx.amount||0);
+  const type=String(tx.transaction_type||"").toLowerCase();
+  if(type==="credit"||type==="credited") balance+=amount;
+  else if(type==="debit"||type==="debited") balance-=amount;
+ });
+ document.getElementById("walletBalance").textContent="₹"+balance.toFixed(2);
+
+ const {data:referrals,error:referralError}=await supabaseClient.from("referrals")
+ .select("referred_user_id,status,reward_amount,created_at,completed_at")
+ .eq("referrer_id",user.id).order("created_at",{ascending:false});
+ if(referralError){showError("Referral history load nahi hui: "+referralError.message);return}
+ renderHistory(referrals||[]);
+}
+
+function renderHistory(referrals){
+ const history=document.getElementById("history");
+ if(!referrals.length){history.innerHTML='<div class="empty">Abhi koi successful referral nahi hai.</div>';return}
+ history.innerHTML=referrals.map((item,index)=>{
+  const date=item.created_at?new Date(item.created_at).toLocaleDateString("en-IN"):"-";
+  const status=String(item.status||"pending").toLowerCase();
+  const reward=Number(item.reward_amount||0);
+  return '<div class="reward"><div><strong>Referral #'+(index+1)+'</strong><div class="muted">'+date+'</div></div><div style="text-align:right"><strong>₹'+reward.toFixed(2)+'</strong><div class="muted">'+status+'</div></div></div>';
+ }).join("");
+}
+
+async function copyReferralLink(){
+ if(!referralLinkValue)return;
+ try{await navigator.clipboard.writeText(referralLinkValue)}
+ catch(e){const t=document.createElement("textarea");t.value=referralLinkValue;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()}
+ const s=document.getElementById("copyStatus");s.style.display="block";setTimeout(()=>s.style.display="none",2000);
+}
+loadReferralPage();
+</script>
+</body>
+</html>
