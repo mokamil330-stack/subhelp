@@ -725,22 +725,21 @@ if (orderData.payment_method === "wallet") {
             "verify-payment",
             {
               body: {
+  razorpay_order_id:
+    response.razorpay_order_id,
 
-                razorpay_order_id:
-                  response.razorpay_order_id,
+  razorpay_payment_id:
+    response.razorpay_payment_id,
 
-                razorpay_payment_id:
-                  response.razorpay_payment_id,
+  razorpay_signature:
+    response.razorpay_signature,
 
-                razorpay_signature:
-                  response.razorpay_signature,
+  campaign_id:
+    campaignId,
 
-                campaign_id:
-                  campaignId
-
-              }
-            }
-          );
+  wallet_amount:
+    Number(orderData.wallet_amount) || 0
+}
 
 
         // -------------------------------------
