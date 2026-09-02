@@ -613,6 +613,7 @@ loadWalletBalance();
 // -----------------------------------------
 
 if (orderData.payment_method === "wallet") {
+
   message.style.color = "#444";
   message.textContent =
     "⏳ Wallet payment process ho raha hai...";
@@ -621,41 +622,62 @@ if (orderData.payment_method === "wallet") {
     "wallet_" + campaignId + "_" + Date.now();
 
   const {
-    data: verifyData,
-    error: verifyError
+    data: walletData,
+    error: walletError
   } =
     await window.supabaseClient.functions.invoke(
-      "verify-payment",
+      "wallet-campaign-payment",
       {
         body: {
           campaign_id: campaignId,
-          wallet_amount: 19,
-          razorpay_order_id: "wallet_payment",
-          razorpay_payment_id: walletReference,
-          razorpay_signature: "wallet_payment"
+          payment_reference: walletReference
         }
       }
     );
 
-  if (
-    verifyError ||
-    !verifyData ||
-    !verifyData.success
-  ) {
+  if (walletError) {
+
     console.error(
       "Wallet payment error:",
-      verifyError || verifyData
+      walletError
     );
 
     message.style.color = "#b00020";
     message.textContent =
-      "❌ Wallet payment complete nahi ho saka.";
+      "❌ Wallet payment complete nahi ho saka: " +
+      walletError.message;
 
     payButton.disabled = false;
     updatePaymentBreakdown();
 
     return;
   }
+
+  if (!walletData || !walletData.success) {
+
+    console.error(
+      "Wallet payment response:",
+      walletData
+    );
+
+    message.style.color = "#b00020";
+    message.textContent =
+      "❌ " +
+      (
+        walletData?.error ||
+        walletData?.message ||
+        "Wallet payment complete nahi ho saka."
+      );
+
+    payButton.disabled = false;
+    updatePaymentBreakdown();
+
+    return;
+  }
+
+  // -----------------------------------------
+  // WALLET PAYMENT SUCCESS
+  // -----------------------------------------
 
   document.getElementById(
     "paymentSection"
