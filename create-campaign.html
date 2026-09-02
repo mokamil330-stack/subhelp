@@ -7,6 +7,10 @@
   <title>Create Campaign – SubHelp</title>
   <meta name="description" content="Create a SubHelp funding campaign up to ₹5,000.">
 
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -123,6 +127,11 @@
       opacity: 0.9;
     }
 
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .notice {
       margin-top: 18px;
       font-size: 13px;
@@ -131,24 +140,14 @@
       text-align: center;
     }
 
-    .success {
+    .error {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #ffecec;
+      color: #b00020;
       display: none;
-      text-align: center;
-      padding: 25px 10px;
-    }
-
-    .success-icon {
-      font-size: 55px;
-      margin-bottom: 10px;
-    }
-
-    .success h2 {
-      margin-bottom: 10px;
-    }
-
-    .success p {
-      color: #666;
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     .back {
@@ -182,14 +181,14 @@
 
   <div class="box">
 
-    <div id="formSection">
+    <h1>🆘 Create Your Campaign</h1>
 
-      <h1>🆘 Create Your Campaign</h1>
+    <p class="subtitle">
+      Apni genuine zarurat ke liye campaign create karein.
+      Maximum funding goal ₹5,000 hai.
+    </p>
 
-      <p class="subtitle">
-        Apni genuine zarurat ke liye campaign create karein.
-        Maximum funding goal ₹5,000 hai.
-      </p>
+    <form id="campaignForm">
 
       <label for="title">Campaign Title</label>
       <input
@@ -197,11 +196,12 @@
         id="title"
         placeholder="Example: School Fee ke liye Help"
         maxlength="80"
+        required
       >
 
       <label for="category">Category</label>
 
-      <select id="category">
+      <select id="category" required>
         <option value="">Select Category</option>
         <option>Education</option>
         <option>Emergency</option>
@@ -219,6 +219,7 @@
         placeholder="Example: 1500"
         min="10"
         max="5000"
+        required
       >
 
       <div class="limit">
@@ -231,6 +232,7 @@
         id="description"
         placeholder="Apni zarurat ko simple words mein explain karein..."
         maxlength="1000"
+        required
       ></textarea>
 
       <label for="upi">Your UPI ID</label>
@@ -239,6 +241,8 @@
         type="text"
         id="upi"
         placeholder="example@upi"
+        maxlength="100"
+        required
       >
 
       <div class="fee">
@@ -246,33 +250,21 @@
         <span>₹19</span>
       </div>
 
-      <button onclick="createCampaign()">
+      <button type="submit" id="submitBtn">
         Continue – ₹19
       </button>
 
-      <p class="notice">
-        Campaign live hone se pehle SubHelp verification process se guzrega.
-      </p>
+      <div id="errorMessage" class="error"></div>
 
-    </div>
+    </form>
 
+    <p class="notice">
+      Campaign live hone se pehle SubHelp verification process se guzrega.
+    </p>
 
-    <div class="success" id="successSection">
-
-      <div class="success-icon">🎉</div>
-
-      <h2>Campaign Ready!</h2>
-
-      <p>
-        Tumhari campaign details successfully submit ho gayi hain.
-        Ab ₹19 payment ke baad campaign verification ke liye jayega.
-      </p>
-
-      <a href="index.html" class="back">
-        ← Back to SubHelp
-      </a>
-
-    </div>
+    <a href="dashboard.html" class="back">
+      ← Back to Dashboard
+    </a>
 
   </div>
 
@@ -280,47 +272,161 @@
 
 <script>
 
-function createCampaign() {
+  const campaignForm = document.getElementById("campaignForm");
+  const submitBtn = document.getElementById("submitBtn");
+  const errorMessage = document.getElementById("errorMessage");
 
-  const title = document.getElementById("title").value.trim();
-  const category = document.getElementById("category").value;
-  const amount = Number(document.getElementById("amount").value);
-  const description = document.getElementById("description").value.trim();
-  const upi = document.getElementById("upi").value.trim();
 
-  if (!title) {
-    alert("Campaign title enter karein.");
-    return;
+  // Check login
+  async function checkLogin() {
+
+    const { data, error } =
+      await window.supabaseClient.auth.getUser();
+
+    if (error || !data.user) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    return true;
   }
 
-  if (!category) {
-    alert("Category select karein.");
-    return;
+
+  // Create campaign
+  campaignForm.addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    errorMessage.style.display = "none";
+    errorMessage.textContent = "";
+
+    const loggedIn = await checkLogin();
+
+    if (!loggedIn) {
+      return;
+    }
+
+    const title =
+      document.getElementById("title").value.trim();
+
+    const category =
+      document.getElementById("category").value;
+
+    const amount =
+      Number(document.getElementById("amount").value);
+
+    const description =
+      document.getElementById("description").value.trim();
+
+    const upi =
+      document.getElementById("upi").value.trim();
+
+
+    // Validation
+    if (!title) {
+      showError("Campaign title enter karein.");
+      return;
+    }
+
+    if (!category) {
+      showError("Category select karein.");
+      return;
+    }
+
+    if (!amount || amount < 10 || amount > 5000) {
+      showError("Funding amount ₹10 se ₹5,000 ke beech hona chahiye.");
+      return;
+    }
+
+    if (!description) {
+      showError("Apni need ka reason enter karein.");
+      return;
+    }
+
+    if (!upi) {
+      showError("UPI ID enter karein.");
+      return;
+    }
+
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Campaign save ho rahi hai...";
+
+
+    // Current user
+    const { data: userData, error: userError } =
+      await window.supabaseClient.auth.getUser();
+
+    if (userError || !userData.user) {
+
+      showError("Login session expire ho gayi. Dobara login karein.");
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Continue – ₹19";
+
+      return;
+    }
+
+
+    const user = userData.user;
+
+
+    // Save campaign in Supabase
+    const { data: campaign, error } =
+      await window.supabaseClient
+        .from("campaigns")
+        .insert({
+          user_id: user.id,
+          title: title,
+          category: category,
+          description: description,
+          goal_amount: amount,
+          upi_id: upi,
+          status: "pending"
+        })
+        .select()
+        .single();
+
+
+    if (error) {
+
+      showError(
+        "Campaign save nahi ho saki: " + error.message
+      );
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Continue – ₹19";
+
+      return;
+    }
+
+
+    // Campaign successfully saved
+    // Payment page ko campaign ID bhej rahe hain
+    const paymentUrl =
+      "payment.html?campaign_id=" +
+      encodeURIComponent(campaign.id) +
+      "&title=" +
+      encodeURIComponent(title) +
+      "&amount=" +
+      encodeURIComponent(amount);
+
+
+    window.location.href = paymentUrl;
+
+  });
+
+
+  function showError(message) {
+
+    errorMessage.textContent = "❌ " + message;
+    errorMessage.style.display = "block";
+
   }
 
-  if (!amount || amount < 10 || amount > 5000) {
-    alert("Funding amount ₹10 se ₹5,000 ke beech hona chahiye.");
-    return;
-  }
 
-  if (!description) {
-    alert("Apni need ka reason enter karein.");
-    return;
-  }
-
-  if (!upi) {
-    alert("UPI ID enter karein.");
-    return;
-  }
-
- const paymentUrl =
-  "payment.html?title=" +
-  encodeURIComponent(title) +
-  "&amount=" +
-  encodeURIComponent(amount);
-
-window.location.href = paymentUrl;
-}
+  // Run login check when page opens
+  checkLogin();
 
 </script>
 
