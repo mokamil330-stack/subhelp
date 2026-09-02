@@ -6,7 +6,6 @@
 
   <title>My Campaigns | SubHelp</title>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js"></script>
 
@@ -72,12 +71,12 @@
       background: white;
       padding: 20px;
       border-radius: 15px;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.06);
     }
 
     .campaign h2 {
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       font-size: 21px;
     }
 
@@ -87,10 +86,44 @@
       margin-bottom: 12px;
     }
 
+    .description {
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+
     .amount {
       font-size: 18px;
       font-weight: bold;
       margin: 10px 0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 10px 0 8px;
+    }
+
+    .progress {
+      height: 100%;
+      background: #166534;
+      border-radius: 20px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 14px;
+    }
+
+    .remaining {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 15px;
     }
 
     .status {
@@ -102,11 +135,44 @@
       font-size: 13px;
       font-weight: bold;
       text-transform: capitalize;
+      margin-right: 8px;
     }
 
-    .description {
-      color: #555;
-      line-height: 1.5;
+    .status.approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status.rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .complete {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .view-btn {
+      display: inline-block;
+      margin-top: 15px;
+      background: #166534;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
     }
 
     .empty {
@@ -120,6 +186,13 @@
     .loading {
       text-align: center;
       padding: 30px;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 15px;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -137,6 +210,9 @@
 
   <h1>📢 My Campaigns</h1>
 
+  <a href="create-campaign.html" class="create-btn">
+    + Create Campaign ₹19
+  </a>
 
   <div id="campaignList" class="loading">
     Campaigns load ho rahi hain...
@@ -146,99 +222,254 @@
 
 <script>
 
-  async function loadCampaigns() {
+async function loadCampaigns() {
 
-    const campaignList = document.getElementById("campaignList");
+  const campaignList =
+    document.getElementById("campaignList");
 
-    // Check logged-in user
-    const { data: userData, error: userError } =
-      await window.supabaseClient.auth.getUser();
+  // -----------------------------
+  // CHECK LOGIN
+  // -----------------------------
 
-    if (userError || !userData.user) {
-      window.location.href = "login.html";
-      return;
-    }
+  const {
+    data: userData,
+    error: userError
+  } =
+    await window.supabaseClient.auth.getUser();
 
-    const user = userData.user;
-
-    // Get user's campaigns
-    const { data: campaigns, error } =
-      await window.supabaseClient
-        .from("campaigns")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-    if (error) {
-      campaignList.innerHTML =
-        "<p>❌ Campaigns load nahi ho saki: " +
-        error.message +
-        "</p>";
-      return;
-    }
-
-    // No campaigns
-    if (!campaigns || campaigns.length === 0) {
-      campaignList.innerHTML = `
-        <div class="empty">
-          <h2>Abhi koi campaign nahi hai 📭</h2>
-          <p>Apni pehli campaign create karke funding start karein.</p>
-          <a href="create-campaign.html" class="create-btn">
-            Create Campaign ₹19
-          </a>
-        </div>
-      `;
-      return;
-    }
-
-    // Show campaigns
-    campaignList.innerHTML = "";
-
-    campaigns.forEach(campaign => {
-
-      const div = document.createElement("div");
-      div.className = "campaign";
-
-      div.innerHTML = `
-        <h2>${escapeHTML(campaign.title)}</h2>
-
-        <div class="category">
-          Category: ${escapeHTML(campaign.category || "Other")}
-        </div>
-
-        <div class="description">
-          ${escapeHTML(campaign.description || "")}
-        </div>
-
-        <div class="amount">
-          ₹${Number(campaign.collected_amount || 0).toLocaleString("en-IN")}
-          collected /
-          ₹${Number(campaign.goal_amount || 0).toLocaleString("en-IN")}
-          goal
-        </div>
-
-        <span class="status">
-          ${escapeHTML(campaign.status || "pending")}
-        </span>
-      `;
-
-      campaignList.appendChild(div);
-
-    });
+  if (userError || !userData.user) {
+    window.location.href = "login.html";
+    return;
   }
 
+  const user = userData.user;
 
-  // Prevent HTML injection
-  function escapeHTML(text) {
+  // -----------------------------
+  // GET CAMPAIGNS
+  // -----------------------------
 
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+  const {
+    data: campaigns,
+    error
+  } =
+    await window.supabaseClient
+      .from("campaigns")
+      .select(`
+        id,
+        title,
+        category,
+        description,
+        goal_amount,
+        collected_amount,
+        status,
+        created_at
+      `)
+      .eq("user_id", user.id)
+      .order("created_at", {
+        ascending: false
+      });
 
+  if (error) {
+
+    campaignList.innerHTML = `
+      <div class="error">
+        ❌ Campaigns load nahi ho saki:
+        ${escapeHTML(error.message)}
+      </div>
+    `;
+
+    return;
   }
 
+  // -----------------------------
+  // NO CAMPAIGNS
+  // -----------------------------
 
-  loadCampaigns();
+  if (!campaigns || campaigns.length === 0) {
+
+    campaignList.innerHTML = `
+      <div class="empty">
+
+        <h2>Abhi koi campaign nahi hai 📭</h2>
+
+        <p>
+          Apni pehli campaign create karke
+          funding start karein.
+        </p>
+
+        <a
+          href="create-campaign.html"
+          class="create-btn"
+        >
+          Create Campaign ₹19
+        </a>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  // -----------------------------
+  // SHOW CAMPAIGNS
+  // -----------------------------
+
+  campaignList.innerHTML = "";
+
+  campaigns.forEach(campaign => {
+
+    const goal =
+      Number(campaign.goal_amount || 0);
+
+    const collected =
+      Number(campaign.collected_amount || 0);
+
+    let percentage = 0;
+
+    if (goal > 0) {
+      percentage =
+        (collected / goal) * 100;
+    }
+
+    if (percentage > 100) {
+      percentage = 100;
+    }
+
+    const remaining =
+      Math.max(goal - collected, 0);
+
+    const div =
+      document.createElement("div");
+
+    div.className = "campaign";
+
+    let statusClass =
+      String(campaign.status || "pending")
+        .toLowerCase();
+
+    let completeHTML = "";
+
+    if (
+      goal > 0 &&
+      collected >= goal
+    ) {
+      completeHTML = `
+        <div class="complete">
+          🎉 Funding Goal Complete
+        </div>
+      `;
+    }
+
+    let viewButton = "";
+
+    if (
+      campaign.status === "approved"
+    ) {
+      viewButton = `
+        <a
+          href="campaign.html?id=${encodeURIComponent(campaign.id)}"
+          class="view-btn"
+        >
+          View Campaign
+        </a>
+      `;
+    }
+
+    div.innerHTML = `
+
+      <h2>
+        ${escapeHTML(campaign.title)}
+      </h2>
+
+      <div class="category">
+        Category:
+        ${escapeHTML(
+          campaign.category || "Other"
+        )}
+      </div>
+
+      <div class="description">
+        ${escapeHTML(
+          campaign.description || ""
+        )}
+      </div>
+
+      <div class="amount">
+
+        ₹${collected.toLocaleString("en-IN")}
+        collected /
+
+        ₹${goal.toLocaleString("en-IN")}
+        goal
+
+      </div>
+
+      <div class="progress-bar">
+
+        <div
+          class="progress"
+          style="width: ${percentage}%"
+        ></div>
+
+      </div>
+
+      <div class="progress-text">
+        ${percentage.toFixed(1)}% funded
+      </div>
+
+      <div class="remaining">
+
+        ${
+          remaining > 0
+            ? `₹${remaining.toLocaleString("en-IN")} remaining`
+            : `₹0 remaining`
+        }
+
+      </div>
+
+      <span class="status ${statusClass}">
+        ${escapeHTML(
+          campaign.status || "pending"
+        )}
+      </span>
+
+      ${completeHTML}
+
+      <br>
+
+      ${viewButton}
+
+    `;
+
+    campaignList.appendChild(div);
+
+  });
+
+}
+
+
+// -----------------------------
+// HTML ESCAPE
+// -----------------------------
+
+function escapeHTML(text) {
+
+  const div =
+    document.createElement("div");
+
+  div.textContent =
+    String(text);
+
+  return div.innerHTML;
+
+}
+
+
+// -----------------------------
+// LOAD
+// -----------------------------
+
+loadCampaigns();
 
 </script>
 
