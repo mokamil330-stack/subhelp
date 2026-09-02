@@ -188,6 +188,38 @@
       color: #666;
     }
 
+
+    .utr {
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    .donation-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .donation-actions button {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .verify {
+      background: #16833b;
+      color: white;
+    }
+
+    .donation-reject {
+      background: #d93025;
+      color: white;
+    }
+
     @media (max-width: 600px) {
 
       .top {
@@ -238,8 +270,18 @@
 
   </div>
 
+
 </div>
 
+<!-- DONATION VERIFICATION -->
+<div class="container">
+  <h1>Donation Verification</h1>
+  <p class="subtitle">Donors ke submitted payments ko verify ya reject karein.</p>
+  <div id="donationMessage" class="message"></div>
+  <div id="donations" class="campaigns">
+    <div class="loading">Pending donations load ho rahi hain...</div>
+  </div>
+</div>
 
 <script>
 
@@ -743,11 +785,319 @@
   }
 
 
+
+  // -----------------------------------------
+  // LOAD PENDING DONATIONS
+  // -----------------------------------------
+
+  async function loadDonations() {
+
+    const donationContainer =
+      document.getElementById("donations");
+
+    donationContainer.innerHTML = `
+      <div class="loading">
+        Pending donations load ho rahi hain...
+      </div>
+    `;
+
+    const {
+      data,
+      error
+    } =
+      await window.supabaseClient
+        .from("donations")
+        .select(`
+          id,
+          campaign_id,
+          donor_name,
+          amount,
+          is_anonymous,
+          payment_status,
+          payment_reference,
+          created_at
+        `)
+        .eq("payment_status", "pending")
+        .order("created_at", {
+          ascending: false
+        });
+
+    if (error) {
+      console.error("Donation loading error:", error);
+
+      donationContainer.innerHTML = `
+        <div class="empty">
+          ❌ Donations load nahi ho pa rahi hain.
+          <br><br>
+          ${escapeHtml(error.message)}
+        </div>
+      `;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      donationContainer.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">✅</div>
+          <h2>Koi pending donation nahi hai</h2>
+          <p style="margin-top:10px;">
+            Sabhi submitted donations verify ho chuki hain.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    donationContainer.innerHTML = "";
+
+    for (const donation of data) {
+
+      let campaignTitle = "Unknown Campaign";
+
+      const { data: campaign } =
+        await window.supabaseClient
+          .from("campaigns")
+          .select("title")
+          .eq("id", donation.campaign_id)
+          .maybeSingle();
+
+      if (campaign) {
+        campaignTitle = campaign.title;
+      }
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const donor =
+        donation.is_anonymous
+          ? "Anonymous"
+          : (donation.donor_name || "Unknown Donor");
+
+      const utr =
+        donation.payment_reference
+          ? escapeHtml(donation.payment_reference)
+          : "Not provided";
+
+      const date =
+        donation.created_at
+          ? new Date(donation.created_at).toLocaleString("en-IN")
+          : "—";
+
+      card.innerHTML = `
+        <div class="top">
+          <div class="title">
+            ₹${Number(donation.amount || 0).toLocaleString("en-IN")}
+          </div>
+          <div class="status">PENDING</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Campaign</div>
+          <div class="value">${escapeHtml(campaignTitle)}</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Donor</div>
+          <div class="value">${escapeHtml(donor)}</div>
+        </div>
+
+        <div class="row">
+          <div class="label">UTR / Transaction ID</div>
+          <div class="value utr">${utr}</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Submitted</div>
+          <div class="value">${escapeHtml(date)}</div>
+        </div>
+
+        <div class="actions donation-actions">
+          <button
+            class="verify"
+            onclick="verifyDonation('${donation.id}', this)"
+          >
+            ✅ Verify
+          </button>
+
+          <button
+            class="donation-reject"
+            onclick="rejectDonation('${donation.id}', this)"
+          >
+            ❌ Reject
+          </button>
+        </div>
+      `;
+
+      donationContainer.appendChild(card);
+    }
+  }
+
+
+  // -----------------------------------------
+  // VERIFY DONATION
+  // -----------------------------------------
+
+  async function verifyDonation(
+    donationId,
+    clickedButton
+  ) {
+
+    if (!confirm(
+      "Kya aap is donation ko VERIFY karna chahte hain?"
+    )) {
+      return;
+    }
+
+    const card =
+      clickedButton.closest(".card");
+
+    const buttons =
+      card.querySelectorAll("button");
+
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+
+    const {
+      data,
+      error
+    } =
+      await window.supabaseClient
+        .rpc("verify_donation", {
+          p_donation_id: donationId
+        });
+
+    if (error) {
+
+      console.error(
+        "Donation verification error:",
+        error
+      );
+
+      showDonationMessage(
+        "❌ Donation verify nahi hui: " +
+        error.message,
+        "error"
+      );
+
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
+
+      return;
+    }
+
+    showDonationMessage(
+      "✅ Donation successfully verified.",
+      "success"
+    );
+
+    setTimeout(() => {
+      loadDonations();
+    }, 500);
+  }
+
+
+  // -----------------------------------------
+  // REJECT DONATION
+  // -----------------------------------------
+
+  async function rejectDonation(
+    donationId,
+    clickedButton
+  ) {
+
+    if (!confirm(
+      "Kya aap is donation ko REJECT karna chahte hain?"
+    )) {
+      return;
+    }
+
+    const card =
+      clickedButton.closest(".card");
+
+    const buttons =
+      card.querySelectorAll("button");
+
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+
+    const {
+      error
+    } =
+      await window.supabaseClient
+        .from("donations")
+        .update({
+          payment_status: "rejected"
+        })
+        .eq("id", donationId)
+        .eq("payment_status", "pending");
+
+    if (error) {
+
+      console.error(
+        "Donation rejection error:",
+        error
+      );
+
+      showDonationMessage(
+        "❌ Donation reject nahi hui: " +
+        error.message,
+        "error"
+      );
+
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
+
+      return;
+    }
+
+    showDonationMessage(
+      "❌ Donation rejected.",
+      "success"
+    );
+
+    setTimeout(() => {
+      loadDonations();
+    }, 500);
+  }
+
+
+  // -----------------------------------------
+  // DONATION MESSAGE
+  // -----------------------------------------
+
+  function showDonationMessage(
+    text,
+    type
+  ) {
+
+    const donationMessage =
+      document.getElementById("donationMessage");
+
+    donationMessage.textContent = text;
+
+    donationMessage.className =
+      "message " + type;
+
+    donationMessage.style.display =
+      "block";
+
+    setTimeout(() => {
+      donationMessage.style.display =
+        "none";
+    }, 4000);
+  }
+
+
   // -----------------------------------------
   // START
   // -----------------------------------------
 
   loadCampaigns();
+  loadDonations();
 
 </script>
 
