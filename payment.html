@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Pay ₹19 – SubHelp</title>
+  <meta name="description" content="Pay the SubHelp campaign creation fee and submit your campaign for verification.">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #171717;
+    }
+
+    header {
+      background: white;
+      padding: 16px 6%;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #635bff;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 45px auto;
+      padding: 0 18px;
+    }
+
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 18px;
+      border: 1px solid #eee;
+    }
+
+    .icon {
+      text-align: center;
+      font-size: 50px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .campaign {
+      background: #f7f7f7;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .campaign-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .campaign-row:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      color: #666;
+    }
+
+    .value {
+      font-weight: 700;
+      text-align: right;
+      max-width: 60%;
+    }
+
+    .fee {
+      display: flex;
+      justify-content: space-between;
+      padding: 18px;
+      background: #f1f0ff;
+      border-radius: 12px;
+      font-size: 19px;
+      font-weight: 800;
+      margin-top: 15px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #635bff;
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .demo {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+
+    .success {
+      display: none;
+      text-align: center;
+    }
+
+    .success-icon {
+      font-size: 60px;
+      margin-bottom: 12px;
+    }
+
+    .success h2 {
+      margin-bottom: 12px;
+    }
+
+    .status {
+      display: inline-block;
+      margin: 12px 0;
+      padding: 9px 15px;
+      border-radius: 20px;
+      background: #fff4cc;
+      color: #8a6500;
+      font-weight: 700;
+    }
+
+    .success p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 22px;
+      color: #635bff;
+      text-decoration: none;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">Sub<span>Help</span></div>
+</header>
+
+<div class="container">
+
+  <div class="box">
+
+    <div id="paymentSection">
+
+      <div class="icon">💳</div>
+
+      <h1>Campaign Creation Fee</h1>
+
+      <p class="subtitle">
+        Campaign submit karne ke liye ek baar ₹19 campaign creation fee pay karein.
+      </p>
+
+      <div class="campaign">
+
+        <div class="campaign-row">
+          <span class="label">Campaign</span>
+          <span class="value" id="campaignTitle">Your Campaign</span>
+        </div>
+
+        <div class="campaign-row">
+          <span class="label">Funding Goal</span>
+          <span class="value" id="campaignAmount">₹0</span>
+        </div>
+
+        <div class="campaign-row">
+          <span class="label">Campaign Status</span>
+          <span class="value">Payment Pending</span>
+        </div>
+
+      </div>
+
+      <div class="fee">
+        <span>Total Payable</span>
+        <span>₹19</span>
+      </div>
+
+      <button onclick="demoPayment()">
+        💳 Pay ₹19 & Submit Campaign
+      </button>
+
+      <p class="demo">
+        Demo Mode: Abhi ye test payment hai. Real payment gateway
+        production launch se pehle connect kiya jayega.
+      </p>
+
+    </div>
+
+
+    <div class="success" id="successSection">
+
+      <div class="success-icon">🎉</div>
+
+      <h2>Payment Successful!</h2>
+
+      <div class="status">
+        ⏳ Pending Verification
+      </div>
+
+      <p>
+        Tumhari ₹19 campaign creation fee successfully received hui.
+        Campaign ab SubHelp verification ke liye submit ho gayi hai.
+      </p>
+
+      <p style="margin-top:12px;">
+        Verification complete hone ke baad campaign live hoga.
+      </p>
+
+      <a href="index.html" class="back">
+        ← Back to SubHelp
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const title = params.get("title");
+const amount = params.get("amount");
+
+if (title) {
+  document.getElementById("campaignTitle").textContent = title;
+}
+
+if (amount) {
+  document.getElementById("campaignAmount").textContent = "₹" + amount;
+}
+
+
+function demoPayment() {
+
+  /*
+    IMPORTANT:
+    This is only a DEMO payment.
+    Real payment gateway will be connected later.
+  */
+
+  const button = document.querySelector("button");
+
+  button.disabled = true;
+  button.textContent = "Processing...";
+
+  setTimeout(function() {
+
+    document.getElementById("paymentSection").style.display = "none";
+    document.getElementById("successSection").style.display = "block";
+
+  }, 1200);
+
+}
+
+</script>
+
+</body>
+</html>
