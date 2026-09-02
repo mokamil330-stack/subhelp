@@ -375,11 +375,49 @@
   let currentWalletBalance = 0;
 
   // -----------------------------------------
+  // WAIT FOR SUPABASE CLIENT
+  // -----------------------------------------
+  // supabase-config.js sets window.supabaseClient, but if that script
+  // is slightly delayed (slow network, cache, etc.) this inline script
+  // can run before it's ready. This just waits a bit instead of
+  // crashing with "Cannot read properties of undefined (reading 'auth')".
+
+  function waitForSupabaseClient(timeoutMs = 5000, intervalMs = 50) {
+    return new Promise((resolve) => {
+      const start = Date.now();
+
+      (function check() {
+        if (window.supabaseClient) {
+          resolve(window.supabaseClient);
+          return;
+        }
+
+        if (Date.now() - start >= timeoutMs) {
+          resolve(null);
+          return;
+        }
+
+        setTimeout(check, intervalMs);
+      })();
+    });
+  }
+
+  // -----------------------------------------
   // LOAD WALLET BALANCE
   // -----------------------------------------
 
   async function loadWalletBalance() {
     try {
+      const client = await waitForSupabaseClient();
+
+      if (!client) {
+        console.error(
+          "Wallet load error: window.supabaseClient never initialized. " +
+          "Check that supabase-config.js loaded successfully."
+        );
+        return;
+      }
+
       const {
         data: userData,
         error: userError
