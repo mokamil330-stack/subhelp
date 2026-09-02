@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recover Payment - SubHelp</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: 60px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.08);
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.5;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .6;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h1>₹9 Payment Recovery</h1>
+
+  <p>
+    Ye page purane captured ₹9 payment ko safely recover
+    karke campaign payment mein record karega.
+  </p>
+
+  <button id="recoverBtn">
+    Recover ₹9 Payment
+  </button>
+
+  <div id="result"></div>
+
+</div>
+
+<script>
+
+const recoverBtn =
+  document.getElementById("recoverBtn");
+
+const result =
+  document.getElementById("result");
+
+
+recoverBtn.addEventListener("click", async () => {
+
+  recoverBtn.disabled = true;
+  recoverBtn.textContent = "Recovery ho rahi hai...";
+
+  result.style.display = "none";
+
+  try {
+
+    const {
+      data: { user },
+      error: authError
+    } = await window.supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error(
+        "Pehle SubHelp account mein login karein."
+      );
+    }
+
+    const { data, error } =
+      await window.supabaseClient.functions.invoke(
+        "recover-payment",
+        {
+          body: {
+            razorpay_order_id:
+              "order_TXCaNtmkT014wx",
+
+            razorpay_payment_id:
+              "pay_TXCaTqYsn4nBcS",
+
+            campaign_id:
+              "e3d8c679-f180-42f4-9d43-a490456ca24d",
+
+            wallet_amount: 10
+          }
+        }
+      );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data || data.success !== true) {
+      throw new Error(
+        data?.error ||
+        data?.message ||
+        "Payment recovery failed."
+      );
+    }
+
+    result.className = "success";
+    result.style.display = "block";
+
+    result.textContent =
+      "✅ Payment successfully recovered!\n\n" +
+      "Total Fee: ₹19\n" +
+      "Wallet Used: ₹10\n" +
+      "Razorpay Payment: ₹9";
+
+    recoverBtn.textContent = "Recovery Complete";
+
+  } catch (error) {
+
+    console.error(error);
+
+    result.className = "error";
+    result.style.display = "block";
+
+    result.textContent =
+      "❌ Recovery failed:\n\n" +
+      error.message;
+
+    recoverBtn.disabled = false;
+    recoverBtn.textContent = "Try Again";
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
