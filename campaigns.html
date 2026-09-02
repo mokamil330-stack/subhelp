@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Help Someone – SubHelp</title>
+  <meta
+    name="description"
+    content="Support genuine small needs through SubHelp."
+  >
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #171717;
+    }
+
+    header {
+      background: white;
+      padding: 16px 6%;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #635bff;
+    }
+
+    .login {
+      text-decoration: none;
+      color: #635bff;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 35px auto;
+      padding: 0 18px;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .campaigns {
+      display: grid;
+      gap: 18px;
+    }
+
+    .campaign-card {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .category {
+      display: inline-block;
+      background: #f1f0ff;
+      color: #635bff;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .campaign-card h2 {
+      font-size: 21px;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .amount-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+      font-size: 14px;
+    }
+
+    .collected {
+      font-weight: 700;
+    }
+
+    .goal {
+      color: #666;
+    }
+
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: #e8e8e8;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #635bff;
+      border-radius: 20px;
+    }
+
+    .help-button {
+      display: block;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      background: #635bff;
+      color: white;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .empty {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 18px;
+      padding: 40px 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .empty-icon {
+      font-size: 45px;
+      margin-bottom: 12px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .error {
+      background: #fff0f0;
+      color: #b00020;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin-top: 25px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .campaign-card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">Sub<span>Help</span></div>
+
+  <a href="login.html" class="login">
+    Login
+  </a>
+</header>
+
+
+<div class="container">
+
+  <h1>Help Someone ❤️</h1>
+
+  <p class="subtitle">
+    Chhoti zarurat wale logon ki genuine campaigns dekhein
+    aur apni capacity ke hisaab se madad karein.
+  </p>
+
+  <div id="campaigns" class="campaigns">
+
+    <div class="loading">
+      Campaigns load ho rahi hain...
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+async function loadCampaigns() {
+
+  const container =
+    document.getElementById("campaigns");
+
+
+  // Check Supabase
+
+  if (!window.supabaseClient) {
+
+    container.innerHTML = `
+      <div class="error">
+        ❌ Supabase load nahi hua.
+        Page refresh karke dobara try karein.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  // Get approved campaigns
+
+  const {
+    data,
+    error
+  } =
+    await window.supabaseClient
+      .from("campaigns")
+      .select(`
+        id,
+        title,
+        category,
+        description,
+        goal_amount,
+        collected_amount,
+        is_pro,
+        is_boosted
+      `)
+      .eq("status", "approved")
+      .order("created_at", {
+        ascending: false
+      });
+
+
+  if (error) {
+
+    console.error(
+      "Campaign loading error:",
+      error
+    );
+
+    container.innerHTML = `
+      <div class="error">
+        ❌ Campaigns load nahi ho pa rahi hain.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  // No campaigns
+
+  if (!data || data.length === 0) {
+
+    container.innerHTML = `
+      <div class="empty">
+
+        <div class="empty-icon">
+          ❤️
+        </div>
+
+        <h2>
+          Abhi koi campaign live nahi hai
+        </h2>
+
+        <p style="margin-top:10px;">
+          Jab verified campaigns approve hongi,
+          woh yahan दिखाई देंगी.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+
+  // Clear loading
+
+  container.innerHTML = "";
+
+
+  // Create campaign cards
+
+  data.forEach(campaign => {
+
+    const goal =
+      Number(campaign.goal_amount || 0);
+
+    const collected =
+      Number(campaign.collected_amount || 0);
+
+
+    let percentage = 0;
+
+    if (goal > 0) {
+
+      percentage =
+        Math.round(
+          (collected / goal) * 100
+        );
+
+    }
+
+
+    // Maximum 100%
+
+    percentage =
+      Math.min(percentage, 100);
+
+
+    const card =
+      document.createElement("div");
+
+    card.className =
+      "campaign-card";
+
+
+    card.innerHTML = `
+
+      <div class="category">
+        ${escapeHtml(campaign.category)}
+      </div>
+
+      <h2>
+        ${escapeHtml(campaign.title)}
+      </h2>
+
+      <p class="description">
+        ${escapeHtml(campaign.description)}
+      </p>
+
+      <div class="amount-row">
+
+        <span class="collected">
+          ₹${collected.toLocaleString("en-IN")} collected
+        </span>
+
+        <span class="goal">
+          Goal ₹${goal.toLocaleString("en-IN")}
+        </span>
+
+      </div>
+
+      <div class="progress">
+
+        <div
+          class="progress-bar"
+          style="width:${percentage}%"
+        ></div>
+
+      </div>
+
+      <a
+        href="campaign.html?id=${encodeURIComponent(campaign.id)}"
+        class="help-button"
+      >
+        ❤️ Help Now
+      </a>
+
+    `;
+
+
+    container.appendChild(card);
+
+  });
+
+}
+
+
+// -----------------------------------------
+// SECURITY: ESCAPE TEXT
+// -----------------------------------------
+
+function escapeHtml(value) {
+
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+// -----------------------------------------
+// LOAD
+// -----------------------------------------
+
+loadCampaigns();
+
+</script>
+
+</body>
+</html>
