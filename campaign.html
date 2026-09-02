@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Campaign – SubHelp</title>
+  <meta
+    name="description"
+    content="Support a genuine campaign on SubHelp."
+  >
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #171717;
+    }
+
+    header {
+      background: white;
+      padding: 16px 6%;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #635bff;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 0 18px;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 18px;
+      color: #635bff;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 20px;
+      padding: 25px;
+    }
+
+    .category {
+      display: inline-block;
+      background: #f1f0ff;
+      color: #635bff;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 15px;
+      line-height: 1.25;
+    }
+
+    .description {
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 25px;
+      white-space: pre-wrap;
+    }
+
+    .amount-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .collected {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .goal {
+      color: #666;
+      font-weight: 600;
+    }
+
+    .progress {
+      width: 100%;
+      height: 12px;
+      background: #e8e8e8;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #635bff;
+      border-radius: 20px;
+    }
+
+    .remaining {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .help-box {
+      background: #f8f8ff;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .help-box h2 {
+      font-size: 21px;
+      margin-bottom: 8px;
+    }
+
+    .help-box p {
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .help-button {
+      display: block;
+      width: 100%;
+      border: none;
+      background: #635bff;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .help-button:hover {
+      opacity: 0.9;
+    }
+
+    .loading,
+    .error,
+    .not-found {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 18px;
+      padding: 40px 20px;
+      text-align: center;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .error {
+      color: #b00020;
+      background: #fff0f0;
+    }
+
+    .owner-note {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #eee;
+      color: #888;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+
+      .card {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .amount-row {
+        flex-direction: column;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    Sub<span>Help</span>
+  </div>
+</header>
+
+
+<div class="container">
+
+  <a href="campaigns.html" class="back">
+    ← Back to Campaigns
+  </a>
+
+
+  <div id="content">
+
+    <div class="loading">
+      Campaign details load ho rahi hain...
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  // -----------------------------------------
+  // GET CAMPAIGN ID FROM URL
+  // -----------------------------------------
+
+  const params =
+    new URLSearchParams(window.location.search);
+
+  const campaignId =
+    params.get("id");
+
+
+  const content =
+    document.getElementById("content");
+
+
+  // -----------------------------------------
+  // ESCAPE HTML
+  // -----------------------------------------
+
+  function escapeHtml(value) {
+
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  // -----------------------------------------
+  // LOAD CAMPAIGN
+  // -----------------------------------------
+
+  async function loadCampaign() {
+
+    if (!campaignId) {
+
+      content.innerHTML = `
+        <div class="not-found">
+          ❌ Campaign ID nahi mili.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    if (!window.supabaseClient) {
+
+      content.innerHTML = `
+        <div class="error">
+          ❌ Supabase load nahi hua.
+          <br><br>
+          Page refresh karke dobara try karein.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    // ---------------------------------------
+    // GET APPROVED CAMPAIGN
+    // ---------------------------------------
+
+    const {
+      data: campaign,
+      error
+    } =
+      await window.supabaseClient
+        .from("campaigns")
+        .select(`
+          id,
+          title,
+          category,
+          description,
+          goal_amount,
+          collected_amount,
+          status
+        `)
+        .eq("id", campaignId)
+        .eq("status", "approved")
+        .single();
+
+
+    if (error || !campaign) {
+
+      console.error(
+        "Campaign error:",
+        error
+      );
+
+      content.innerHTML = `
+        <div class="not-found">
+
+          <div style="font-size:45px;">
+            🔍
+          </div>
+
+          <h2 style="margin-top:10px;">
+            Campaign nahi mili
+          </h2>
+
+          <p style="margin-top:10px;">
+            Ye campaign available nahi hai
+            ya abhi approved nahi hui hai.
+          </p>
+
+        </div>
+      `;
+
+      return;
+    }
+
+
+    // ---------------------------------------
+    // AMOUNTS
+    // ---------------------------------------
+
+    const goal =
+      Number(campaign.goal_amount || 0);
+
+    const collected =
+      Number(campaign.collected_amount || 0);
+
+
+    const remaining =
+      Math.max(goal - collected, 0);
+
+
+    let percentage = 0;
+
+    if (goal > 0) {
+
+      percentage =
+        Math.round(
+          (collected / goal) * 100
+        );
+
+    }
+
+
+    percentage =
+      Math.min(percentage, 100);
+
+
+    // ---------------------------------------
+    // SHOW CAMPAIGN
+    // ---------------------------------------
+
+    content.innerHTML = `
+
+      <div class="card">
+
+        <div class="category">
+          ${escapeHtml(campaign.category)}
+        </div>
+
+
+        <h1>
+          ${escapeHtml(campaign.title)}
+        </h1>
+
+
+        <div class="description">
+          ${escapeHtml(campaign.description)}
+        </div>
+
+
+        <div class="amount-row">
+
+          <span class="collected">
+            ₹${collected.toLocaleString("en-IN")}
+            collected
+          </span>
+
+          <span class="goal">
+            Goal ₹${goal.toLocaleString("en-IN")}
+          </span>
+
+        </div>
+
+
+        <div class="progress">
+
+          <div
+            class="progress-bar"
+            style="width:${percentage}%"
+          ></div>
+
+        </div>
+
+
+        <div class="remaining">
+
+          ₹${remaining.toLocaleString("en-IN")}
+          abhi required hai
+
+        </div>
+
+
+        <div class="help-box">
+
+          <h2>
+            ❤️ Is Campaign ki Madad Karein
+          </h2>
+
+          <p>
+            Agar aap is zarurat mein madad karna chahte hain,
+            neeche button par click karein.
+          </p>
+
+          <button
+            class="help-button"
+            onclick="helpNow()"
+          >
+            ❤️ Help Now
+          </button>
+
+        </div>
+
+
+        <div class="owner-note">
+
+          SubHelp campaigns verification ke baad
+          public ki jaati hain. Donation karne se pehle
+          campaign ki details dhyan se check karein.
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  // -----------------------------------------
+  // HELP NOW
+  // -----------------------------------------
+
+  function helpNow() {
+
+    alert(
+      "Donation payment system abhi setup ho raha hai. ❤️"
+    );
+
+  }
+
+
+  // -----------------------------------------
+  // START
+  // -----------------------------------------
+
+  loadCampaign();
+
+</script>
+
+</body>
+</html>
