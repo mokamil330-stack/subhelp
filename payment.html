@@ -253,7 +253,61 @@
         <span>Total Payable</span>
         <span>₹19</span>
       </div>
+<div id="walletBox" style="
+  margin-top:15px;
+  padding:16px;
+  background:#f8f8ff;
+  border:1px solid #e5e3ff;
+  border-radius:12px;
+">
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+  ">
+    <span style="font-weight:700;">💰 Wallet Balance</span>
+    <span id="walletBalance" style="font-weight:800;">₹0</span>
+  </div>
 
+  <label style="
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+  ">
+    <input
+      type="checkbox"
+      id="useWallet"
+      style="width:18px;height:18px;"
+    >
+    <span>Use Wallet Balance</span>
+  </label>
+
+  <div id="paymentBreakdown"
+       style="
+         display:none;
+         margin-top:12px;
+         padding-top:12px;
+         border-top:1px solid #ddd;
+         line-height:1.8;
+       ">
+    <div style="display:flex;justify-content:space-between;">
+      <span>Campaign Fee</span>
+      <strong>₹19</strong>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;">
+      <span>Wallet Used</span>
+      <strong id="walletUsed">₹0</strong>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;">
+      <span>Pay via Razorpay</span>
+      <strong id="razorpayPayable">₹19</strong>
+    </div>
+  </div>
+</div>
       <button id="payButton">
         💳 Pay ₹19 & Submit Campaign
       </button>
@@ -312,12 +366,106 @@
 
   const payButton = document.getElementById("payButton");
   const message = document.getElementById("message");
+const useWallet = document.getElementById("useWallet");
+const walletBalanceEl = document.getElementById("walletBalance");
+const paymentBreakdown = document.getElementById("paymentBreakdown");
+const walletUsedEl = document.getElementById("walletUsed");
+const razorpayPayableEl = document.getElementById("razorpayPayable");
 
+let currentWalletBalance = 0;
 
   // -----------------------------------------
   // SHOW CAMPAIGN DETAILS
   // -----------------------------------------
+async function loadWalletBalance() {
+  try {
+    const {
+      data: userData,
+      error: userError
+    } = await window.supabaseClient.auth.getUser();
 
+    if (userError || !userData.user) {
+      return;
+    }
+
+    const {
+      data: transactions,
+      error
+    } = await window.supabaseClient
+      .from("wallet_transactions")
+      .select("amount, transaction_type")
+      .eq("user_id", userData.user.id);
+
+    if (error) {
+      console.error("Wallet balance error:", error);
+      return;
+    }
+
+    currentWalletBalance = (transactions || []).reduce(
+      (balance, transaction) => {
+        const value = Number(transaction.amount) || 0;
+
+        if (transaction.transaction_type === "credit") {
+          return balance + value;
+        }
+
+        if (transaction.transaction_type === "debit") {
+          return balance - value;
+        }
+
+        return balance;
+      },
+      0
+    );
+
+    currentWalletBalance = Math.max(
+      0,
+      currentWalletBalance
+    );
+
+    walletBalanceEl.textContent =
+      "₹" + currentWalletBalance.toFixed(2);
+
+    updatePaymentBreakdown();
+
+  } catch (error) {
+    console.error("Wallet load error:", error);
+  }
+}
+  function updatePaymentBreakdown() {
+  if (!useWallet.checked) {
+    paymentBreakdown.style.display = "none";
+    return;
+  }
+
+  const walletUsed = Math.min(
+    currentWalletBalance,
+    19
+  );
+
+  const razorpayAmount = Math.max(
+    0,
+    19 - walletUsed
+  );
+
+  walletUsedEl.textContent =
+    "₹" + walletUsed.toFixed(2);
+
+  razorpayPayableEl.textContent =
+    "₹" + razorpayAmount.toFixed(2);
+
+  paymentBreakdown.style.display = "block";
+
+  if (razorpayAmount === 0) {
+    payButton.textContent =
+      "💰 Pay ₹19 Using Wallet";
+  } else {
+    payButton.textContent =
+      "💳 Pay ₹" +
+      razorpayAmount.toFixed(2) +
+      " & Submit Campaign";
+  }
+}
   if (title) {
     document.getElementById("campaignTitle").textContent = title;
   }
@@ -404,16 +552,17 @@
     // -----------------------------------------
 
     const {
-      data: orderData,
-      error: orderError
-    } = await window.supabaseClient.functions.invoke(
-      "create-payment",
-      {
-        body: {
-          campaign_id: campaignId
-        }
-      }
-    );
+  data: orderData,
+  error: orderError
+} = await window.supabaseClient.functions.invoke(
+  "create-payment",
+  {
+    body: {
+      campaign_id: campaignId,
+      use_wallet: useWallet.checked
+    }
+  }
+);
 
 
     if (orderError) {
@@ -438,7 +587,7 @@
     // CHECK ORDER RESPONSE
     // -----------------------------------------
 
-    if (!orderData || !orderData.order_id) {
+    if (!orderData || !orderData.success) {
 
       console.error("Invalid order response:", orderData);
 
@@ -453,7 +602,65 @@
 
       return;
     }
+// -----------------------------------------
+// FULL WALLET PAYMENT
+// -----------------------------------------
 
+if (orderData.payment_method === "wallet") {
+  message.style.color = "#444";
+  message.textContent =
+    "⏳ Wallet payment process ho raha hai...";
+
+  const walletReference =
+    "wallet_" + campaignId + "_" + Date.now();
+
+  const {
+    data: verifyData,
+    error: verifyError
+  } =
+    await window.supabaseClient.functions.invoke(
+      "verify-payment",
+      {
+        body: {
+          campaign_id: campaignId,
+          wallet_amount: 19,
+          razorpay_order_id: "wallet_payment",
+          razorpay_payment_id: walletReference,
+          razorpay_signature: "wallet_payment"
+        }
+      }
+    );
+
+  if (
+    verifyError ||
+    !verifyData ||
+    !verifyData.success
+  ) {
+    console.error(
+      "Wallet payment error:",
+      verifyError || verifyData
+    );
+
+    message.style.color = "#b00020";
+    message.textContent =
+      "❌ Wallet payment complete nahi ho saka.";
+
+    payButton.disabled = false;
+    updatePaymentBreakdown();
+
+    return;
+  }
+
+  document.getElementById(
+    "paymentSection"
+  ).style.display = "none";
+
+  document.getElementById(
+    "successSection"
+  ).style.display = "block";
+
+  return;
+}
 
     // -----------------------------------------
     // RAZORPAY CHECKOUT
