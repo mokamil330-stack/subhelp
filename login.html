@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Login | SubHelp</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 60px auto;
+      padding: 20px;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: #166534;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .box {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 9px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 9px;
+      background: #166534;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #14532d;
+    }
+
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .register {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .register a {
+      color: #166534;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="logo">SubHelp</div>
+    <div class="tagline">Chhoti Zarurat, Milkar Madad ❤️</div>
+
+    <div class="box">
+
+      <h2>Login 🔐</h2>
+
+      <form id="loginForm">
+
+        <label>Email</label>
+        <input
+          type="email"
+          id="email"
+          placeholder="Apna email enter karein"
+          required
+        >
+
+        <label>Password</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="Apna password enter karein"
+          required
+        >
+
+        <button type="submit">
+          Login
+        </button>
+
+      </form>
+
+      <div id="message"></div>
+
+      <div class="register">
+        Account nahi hai?
+        <a href="register.html">Register karein</a>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const loginForm = document.getElementById("loginForm");
+    const message = document.getElementById("message");
+
+    loginForm.addEventListener("submit", async function(e) {
+
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      message.textContent = "Login ho raha hai...";
+
+      const { data, error } =
+        await window.supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+      if (error) {
+        message.textContent = "❌ " + error.message;
+        message.style.color = "red";
+        return;
+      }
+
+      message.textContent = "✅ Login successful!";
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 800);
+
+    });
+
+  </script>
+
+</body>
+</html>
