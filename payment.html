@@ -260,185 +260,130 @@
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
+const options = {
 
-const title = params.get("title");
-const amount = params.get("amount");
-const campaignId = params.get("campaign_id");
-  const message = document.getElementById("message");
+  key: data.key_id,
 
-if (title) {
-  document.getElementById("campaignTitle").textContent = title;
-}
+  amount: data.amount,
 
-if (amount) {
-  document.getElementById("campaignAmount").textContent = "₹" + amount;
-}
+  currency: data.currency,
 
+  name: "SubHelp",
 
-async function startPayment() {
+  description: "Campaign Creation Fee",
 
-  const button = document.getElementById("payButton");
+  order_id: data.order_id,
 
-  button.disabled = true;
-  button.textContent = "Order create ho raha hai...";
+  prefill: {
+    email: userData.user.email
+  },
 
+  theme: {
+    color: "#635bff"
+  },
 
-  // Check logged-in user
-  const { data: userData, error: userError } =
-    await window.supabaseClient.auth.getUser();
+  handler: async function(response) {
 
-  if (userError || !userData.user) {
+    console.log("Razorpay Payment:", response);
 
-    alert("Pehle login karein.");
+    message.style.color = "#444";
+    message.textContent = "⏳ Payment verify ho raha hai...";
 
-    window.location.href = "login.html";
+    // Server-side payment verification
+    const { data: verifyData, error: verifyError } =
+      await window.supabaseClient.functions.invoke(
+        "verify-payment",
+        {
+          body: {
+            razorpay_order_id:
+              response.razorpay_order_id,
 
-    return;
-  }
+            razorpay_payment_id:
+              response.razorpay_payment_id,
 
+            razorpay_signature:
+              response.razorpay_signature,
 
-  if (!campaignId) {
-
-    alert("Campaign ID nahi mili. Campaign dobara create karein.");
-
-    button.disabled = false;
-    button.textContent = "💳 Pay ₹19 & Submit Campaign";
-
-    return;
-  }
-
-
-  // Create Razorpay Order
-  const { data, error } =
-    await window.supabaseClient.functions.invoke(
-      "create-payment",
-      {
-        body: {
-          campaign_id: campaignId
+            campaign_id:
+              campaignId
+          }
         }
-      }
-    );
+      );
 
+    if (verifyError) {
 
-  if (error) {
+      console.error(
+        "Verification error:",
+        verifyError
+      );
 
-    console.error(error);
+      message.style.color = "#b00020";
 
-    alert(
-      "Razorpay order create nahi ho saka: " +
-      error.message
-    );
+      message.textContent =
+        "❌ Payment verification failed.";
 
-    button.disabled = false;
-    button.textContent = "💳 Pay ₹19 & Submit Campaign";
+      payButton.disabled = false;
 
-    return;
+      payButton.textContent =
+        "💳 Pay ₹19 & Submit Campaign";
+
+      return;
+    }
+
+    if (!verifyData || !verifyData.success) {
+
+      message.style.color = "#b00020";
+
+      message.textContent =
+        "❌ Payment verify nahi ho saka.";
+
+      payButton.disabled = false;
+
+      payButton.textContent =
+        "💳 Pay ₹19 & Submit Campaign";
+
+      return;
+    }
+
+    // Payment successfully verified
+    document.getElementById(
+      "paymentSection"
+    ).style.display = "none";
+
+    document.getElementById(
+      "successSection"
+    ).style.display = "block";
+
+  },
+
+  modal: {
+
+    ondismiss: function() {
+
+      payButton.disabled = false;
+
+      payButton.textContent =
+        "💳 Pay ₹19 & Submit Campaign";
+
+      message.textContent =
+        "Payment window close kar di gayi.";
+
+    }
+
   }
 
-
-  if (!data || !data.order_id) {
-
-    alert("Razorpay Order ID nahi mili.");
-
-    button.disabled = false;
-    button.textContent = "💳 Pay ₹19 & Submit Campaign";
-
-    return;
-  }
+};
 
 
-  // Razorpay Checkout
-  const options = {
-
-    key: data.key_id,
-
-    amount: data.amount,
-
-    currency: data.currency,
-
-    name: "SubHelp",
-
-    description: "Campaign Creation Fee",
-
-    order_id: data.order_id,
-
-    prefill: {
-      email: userData.user.email
-    },
-
-    theme: {
-      color: "#635bff"
-    },
+// Create Razorpay checkout
+const razorpay =
+  new Razorpay(options);
 
 
-    handler: async function(response) {
+// Open Razorpay
+razorpay.open();
 
-  console.log("Razorpay Payment:", response);
-
-  message.textContent = "⏳ Payment verify ho raha hai...";
-
-
-  // Server-side payment verification
-  const { data, error } =
-    await window.supabaseClient.functions.invoke(
-      "verify-payment",
-      {
-        body: {
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
-          campaign_id: campaignId
-        }
-      }
-    );
-
-
-  if (error) {
-
-    console.error("Verification error:", error);
-
-    message.style.color = "#b00020";
-
-    message.textContent =
-      "❌ Payment verification failed. Please contact SubHelp support.";
-
-    return;
-  }
-
-
-  if (!data || !data.success) {
-
-    message.style.color = "#b00020";
-
-    message.textContent =
-      "❌ Payment verify nahi ho saka.";
-
-    return;
-  }
-
-
-  // Payment genuinely verified
-  document.getElementById("paymentSection").style.display =
-    "none";
-
-  document.getElementById("successSection").style.display =
-    "block";
-
-
-  document.querySelector("#successSection h2").textContent =
-    "Payment Successful!";
-
-
-  document.querySelector("#successSection .status").textContent =
-    "⏳ Pending Verification";
-
-
-  document.querySelector("#successSection p").textContent =
-    "Tumhari ₹19 campaign creation fee successfully verify ho gayi hai. Campaign ab SubHelp verification ke liye submit ho gayi hai.";
-
-},
-
+}
 </script>
 
 </body>
