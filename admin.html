@@ -43,6 +43,7 @@
     .admin-label {
       font-size: 14px;
       color: #666;
+      font-weight: 600;
     }
 
     .container {
@@ -59,6 +60,7 @@
     .subtitle {
       color: #666;
       margin-bottom: 25px;
+      line-height: 1.5;
     }
 
     .message {
@@ -67,6 +69,7 @@
       margin-bottom: 20px;
       display: none;
       font-weight: 600;
+      line-height: 1.5;
     }
 
     .error {
@@ -160,6 +163,11 @@
       color: white;
     }
 
+    .actions button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .empty {
       background: white;
       border: 1px solid #eee;
@@ -206,7 +214,7 @@
   </div>
 
   <div class="admin-label">
-    Admin Panel
+    🔐 Admin Panel
   </div>
 
 </header>
@@ -220,14 +228,12 @@
     Pending campaigns ko review karke approve ya reject karein.
   </p>
 
-
   <div id="message" class="message"></div>
-
 
   <div id="campaigns" class="campaigns">
 
     <div class="loading">
-      Campaigns load ho rahi hain...
+      Admin access check ho raha hai...
     </div>
 
   </div>
@@ -260,6 +266,7 @@
     setTimeout(() => {
       message.style.display = "none";
     }, 4000);
+
   }
 
 
@@ -280,20 +287,23 @@
 
 
   // -----------------------------------------
-  // LOAD PENDING CAMPAIGNS
+  // CHECK ADMIN
   // -----------------------------------------
 
-  async function loadCampaigns() {
+  async function checkAdmin() {
 
     if (!window.supabaseClient) {
 
       container.innerHTML = `
         <div class="empty">
           ❌ Supabase load nahi hua.
+          <br><br>
+          Page refresh karke dobara try karein.
         </div>
       `;
 
-      return;
+      return false;
+
     }
 
 
@@ -308,12 +318,137 @@
 
       container.innerHTML = `
         <div class="empty">
-          ❌ Admin login required.
+
+          <div class="empty-icon">
+            🔒
+          </div>
+
+          <h2>
+            Login Required
+          </h2>
+
+          <p style="margin-top:10px;">
+            Admin panel use karne ke liye login karein.
+          </p>
+
+          <a
+            href="login.html"
+            style="
+              display:inline-block;
+              margin-top:20px;
+              color:#635bff;
+              font-weight:700;
+              text-decoration:none;
+            "
+          >
+            Login →
+          </a>
+
         </div>
       `;
 
+      return false;
+
+    }
+
+
+    // ---------------------------------------
+    // GET ADMIN PROFILE
+    // ---------------------------------------
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await window.supabaseClient
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", userData.user.id)
+        .single();
+
+
+    if (profileError) {
+
+      console.error(
+        "Admin profile error:",
+        profileError
+      );
+
+      container.innerHTML = `
+        <div class="empty">
+
+          ❌ Admin permission check nahi ho saka.
+
+          <br><br>
+
+          ${escapeHtml(profileError.message)}
+
+        </div>
+      `;
+
+      return false;
+
+    }
+
+
+    // ---------------------------------------
+    // ADMIN ACCESS DENIED
+    // ---------------------------------------
+
+    if (!profile || profile.is_admin !== true) {
+
+      container.innerHTML = `
+        <div class="empty">
+
+          <div class="empty-icon">
+            🚫
+          </div>
+
+          <h2>
+            Access Denied
+          </h2>
+
+          <p style="margin-top:10px;">
+            Aapko Admin Panel access karne ki permission nahi hai.
+          </p>
+
+        </div>
+      `;
+
+      return false;
+
+    }
+
+
+    // ---------------------------------------
+    // ADMIN VERIFIED
+    // ---------------------------------------
+
+    return true;
+
+  }
+
+
+  // -----------------------------------------
+  // LOAD PENDING CAMPAIGNS
+  // -----------------------------------------
+
+  async function loadCampaigns() {
+
+    const isAdmin =
+      await checkAdmin();
+
+
+    if (!isAdmin) {
       return;
     }
+
+
+    container.innerHTML = `
+      <div class="loading">
+        Pending campaigns load ho rahi hain...
+      </div>
+    `;
 
 
     const {
@@ -343,21 +478,30 @@
     if (error) {
 
       console.error(
-        "Admin campaign error:",
+        "Campaign loading error:",
         error
       );
 
       container.innerHTML = `
         <div class="empty">
+
           ❌ Campaigns load nahi ho pa rahi hain.
+
           <br><br>
+
           ${escapeHtml(error.message)}
+
         </div>
       `;
 
       return;
+
     }
 
+
+    // ---------------------------------------
+    // NO PENDING CAMPAIGNS
+    // ---------------------------------------
 
     if (!data || data.length === 0) {
 
@@ -380,11 +524,16 @@
       `;
 
       return;
+
     }
 
 
     container.innerHTML = "";
 
+
+    // ---------------------------------------
+    // CREATE CARDS
+    // ---------------------------------------
 
     data.forEach(campaign => {
 
@@ -462,31 +611,18 @@
         </div>
 
 
-        <div class="row">
-
-          <div class="label">
-            Campaign ID
-          </div>
-
-          <div class="value">
-            ${escapeHtml(campaign.id)}
-          </div>
-
-        </div>
-
-
         <div class="actions">
 
           <button
             class="approve"
-            onclick="updateCampaign('${campaign.id}', 'approved')"
+            onclick="updateCampaign('${campaign.id}', 'approved', this)"
           >
             ✅ Approve
           </button>
 
           <button
             class="reject"
-            onclick="updateCampaign('${campaign.id}', 'rejected')"
+            onclick="updateCampaign('${campaign.id}', 'rejected', this)"
           >
             ❌ Reject
           </button>
@@ -504,12 +640,13 @@
 
 
   // -----------------------------------------
-  // UPDATE CAMPAIGN STATUS
+  // UPDATE CAMPAIGN
   // -----------------------------------------
 
   async function updateCampaign(
     campaignId,
-    newStatus
+    newStatus,
+    clickedButton
   ) {
 
     const confirmText =
@@ -522,6 +659,24 @@
       return;
     }
 
+
+    // Disable buttons
+
+    const card =
+      clickedButton.closest(".card");
+
+    const buttons =
+      card.querySelectorAll("button");
+
+
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+
+
+    // ---------------------------------------
+    // UPDATE DATABASE
+    // ---------------------------------------
 
     const {
       error
@@ -547,9 +702,20 @@
         "error"
       );
 
+
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
+
+
       return;
+
     }
 
+
+    // ---------------------------------------
+    // SUCCESS
+    // ---------------------------------------
 
     if (newStatus === "approved") {
 
@@ -568,7 +734,11 @@
     }
 
 
-    loadCampaigns();
+    // Reload
+
+    setTimeout(() => {
+      loadCampaigns();
+    }, 500);
 
   }
 
