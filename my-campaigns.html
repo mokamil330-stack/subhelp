@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>My Campaigns | SubHelp</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #166534;
+      color: white;
+      padding: 18px 20px;
+    }
+
+    .header-inner {
+      max-width: 900px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .back {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 25px 18px;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .create-btn {
+      display: inline-block;
+      background: #166534;
+      color: white;
+      padding: 12px 17px;
+      border-radius: 9px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .campaign {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    .campaign h2 {
+      margin: 0 0 10px;
+      font-size: 21px;
+    }
+
+    .category {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .amount {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 7px 12px;
+      border-radius: 20px;
+      background: #fff3cd;
+      color: #856404;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .description {
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .empty {
+      background: white;
+      padding: 35px 20px;
+      text-align: center;
+      border-radius: 15px;
+      color: #666;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">SubHelp</div>
+    <a href="dashboard.html" class="back">← Dashboard</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <h1>📢 My Campaigns</h1>
+
+  <a href="create-campaign.html" class="create-btn">
+    + Create Campaign ₹19
+  </a>
+
+  <div id="campaignList" class="loading">
+    Campaigns load ho rahi hain...
+  </div>
+
+</div>
+
+<script>
+
+  async function loadCampaigns() {
+
+    const campaignList = document.getElementById("campaignList");
+
+    // Check logged-in user
+    const { data: userData, error: userError } =
+      await window.supabaseClient.auth.getUser();
+
+    if (userError || !userData.user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    const user = userData.user;
+
+    // Get user's campaigns
+    const { data: campaigns, error } =
+      await window.supabaseClient
+        .from("campaigns")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+      campaignList.innerHTML =
+        "<p>❌ Campaigns load nahi ho saki: " +
+        error.message +
+        "</p>";
+      return;
+    }
+
+    // No campaigns
+    if (!campaigns || campaigns.length === 0) {
+      campaignList.innerHTML = `
+        <div class="empty">
+          <h2>Abhi koi campaign nahi hai 📭</h2>
+          <p>Apni pehli campaign create karke funding start karein.</p>
+          <a href="create-campaign.html" class="create-btn">
+            Create Campaign ₹19
+          </a>
+        </div>
+      `;
+      return;
+    }
+
+    // Show campaigns
+    campaignList.innerHTML = "";
+
+    campaigns.forEach(campaign => {
+
+      const div = document.createElement("div");
+      div.className = "campaign";
+
+      div.innerHTML = `
+        <h2>${escapeHTML(campaign.title)}</h2>
+
+        <div class="category">
+          Category: ${escapeHTML(campaign.category || "Other")}
+        </div>
+
+        <div class="description">
+          ${escapeHTML(campaign.description || "")}
+        </div>
+
+        <div class="amount">
+          ₹${Number(campaign.collected_amount || 0).toLocaleString("en-IN")}
+          collected /
+          ₹${Number(campaign.goal_amount || 0).toLocaleString("en-IN")}
+          goal
+        </div>
+
+        <span class="status">
+          ${escapeHTML(campaign.status || "pending")}
+        </span>
+      `;
+
+      campaignList.appendChild(div);
+
+    });
+  }
+
+
+  // Prevent HTML injection
+  function escapeHTML(text) {
+
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+
+  }
+
+
+  loadCampaigns();
+
+</script>
+
+</body>
+</html>
