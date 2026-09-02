@@ -220,6 +220,8 @@
   💳 Pay ₹19 & Submit Campaign
 </button>
 
+      <div id="message" style="margin-top:15px; text-align:center; font-weight:bold;"></div>
+      
      <p class="demo">
   🔐 Secure payment powered by Razorpay Test Mode.
 </p>
@@ -263,6 +265,7 @@ const params = new URLSearchParams(window.location.search);
 const title = params.get("title");
 const amount = params.get("amount");
 const campaignId = params.get("campaign_id");
+  const message = document.getElementById("message");
 
 if (title) {
   document.getElementById("campaignTitle").textContent = title;
