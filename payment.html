@@ -466,6 +466,12 @@ async function loadWalletBalance() {
       " & Submit Campaign";
   }
 }
+
+  useWallet.addEventListener("change", function () {
+  updatePaymentBreakdown();
+});
+
+loadWalletBalance();
   if (title) {
     document.getElementById("campaignTitle").textContent = title;
   }
